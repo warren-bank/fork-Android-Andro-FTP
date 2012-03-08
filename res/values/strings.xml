@@ -1,7 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="hello">Hello World, MainActivity!</string>
     <string name="app_name">Andro FTP HD</string>
+
+    <!-- Default values -->
+    <string name="default_port">21</string>
+
+    <!-- Server Manager -->
+    <string name="server_manager_title_my_servers">My Servers</string>
+    <string name="server_manager_title_server_details">Server details</string>
+    <string name="server_manager_label_select_server">Servers</string>
+    <string name="server_manager_label_new_server">New server</string>
+    <string name="server_manager_label_name">Name</string>
+    <string name="server_manager_label_host">Host</string>
+    <string name="server_manager_label_port">Port</string>
+    <string name="server_manager_label_logontype">Logontype</string>
+    <string name="server_manager_label_logontype_anonymous">Anonymous</string>
+    <string name="server_manager_label_logontype_normal">Normal</string>
+    <string name="server_manager_label_username">User</string>
+    <string name="server_manager_label_password">Password</string>
+    <string name="server_manager_button_connect">Connect</string>
+    <string name="server_manager_button_newserver">New server</string>
+    <string name="server_manager_button_delete">Delete</string>
+    <string name="server_manager_button_save">Save</string>
+    <string name="server_manager_button_cancel">Cancel</string>
 
 </resources>

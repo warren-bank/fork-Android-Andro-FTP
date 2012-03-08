@@ -8,7 +8,7 @@ import android.os.Bundle;
  * 
  * @author abachar
  */
-public class ConnectActivity extends Activity {
+public class MainActivity extends Activity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
