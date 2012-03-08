@@ -17,12 +17,46 @@
     <string name="server_manager_label_logontype">Logontype</string>
     <string name="server_manager_label_logontype_anonymous">Anonymous</string>
     <string name="server_manager_label_logontype_normal">Normal</string>
-    <string name="server_manager_label_username">User</string>
+    <string name="server_manager_label_username">Username</string>
     <string name="server_manager_label_password">Password</string>
     <string name="server_manager_button_connect">Connect</string>
     <string name="server_manager_button_newserver">New server</string>
     <string name="server_manager_button_delete">Delete</string>
     <string name="server_manager_button_save">Save</string>
     <string name="server_manager_button_cancel">Cancel</string>
+    <string name="server_manager_error_name_required">Server name is required</string>
+    <string name="server_manager_error_host_required">Server host is required</string>
+    <string name="server_manager_error_port_required">Server port is required</string>
+    <string name="server_manager_error_username_required">Server username is required</string>
+    <string name="server_manager_error_password_required">Server password is required</string>
+
+    <!-- Main window -->
+    <string name="main_tab_local">Local</string>
+    <string name="main_tab_server">Server</string>
+    <string name="main_tab_transfers">Transfers</string>
+    
+    <!-- Menus -->
+    <string name="menu_upload">Upload</string>
+    <string name="menu_download">Download</string>
+    <string name="menu_refresh">Refresh</string>
+    <string name="menu_delete">Delete</string>
+    <string name="menu_newfolder">New folder</string>
+    <string name="menu_rename">Rename</string>
+    <string name="menu_detail">Detail</string>
+    <string name="menu_cancel">Cancel</string>
+    <!-- Transfer fragment -->
+    <string name="transfer_label_source">Source</string>
+    <string name="transfer_label_destination">Destination</string>
+    <string name="transfer_label_size">Size</string>
+    <string name="transfer_label_progress">Progress</string>
+
+    <!--  
+    <string-array name="order_by_list">
+        <item>Name</item>
+        <item>Type</item>
+        <item>Time</item>
+        <item>Size</item>
+    </string-array>
+    -->
 
 </resources>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/menu_upload"
+        android:icon="@drawable/ic_action_upload"
+        android:showAsAction="ifRoom"
+        android:title="@string/menu_upload"
+        android:visible="false"/>
+    <item
+        android:id="@+id/menu_download"
+        android:icon="@drawable/ic_action_download"
+        android:showAsAction="ifRoom"
+        android:title="@string/menu_download"
+        android:visible="false"/>
+    <item
+        android:id="@+id/menu_refresh"
+        android:icon="@drawable/ic_action_refresh"
+        android:showAsAction="ifRoom"
+        android:title="@string/menu_refresh"
+        android:visible="false"/>
+    <item
+        android:id="@+id/menu_delete"
+        android:icon="@drawable/ic_action_delete"
+        android:showAsAction="ifRoom"
+        android:title="@string/menu_delete"
+        android:visible="false"/>
+    <item
+        android:id="@+id/menu_newfolder"
+        android:icon="@drawable/ic_action_newfolder"
+        android:showAsAction="ifRoom"
+        android:title="@string/menu_newfolder"
+        android:visible="false"/>
+    <item
+        android:id="@+id/menu_rename"
+        android:icon="@drawable/ic_action_rename"
+        android:showAsAction="ifRoom"
+        android:title="@string/menu_rename"
+        android:visible="false"/>
+    <item
+        android:id="@+id/menu_detail"
+        android:icon="@drawable/ic_action_detail"
+        android:showAsAction="ifRoom"
+        android:title="@string/menu_detail"
+        android:visible="false"/>
+    <item
+        android:id="@+id/menu_cancel"
+        android:icon="@drawable/ic_action_cancel"
+        android:showAsAction="ifRoom"
+        android:title="@string/menu_cancel"
+        android:visible="false"/>
+
+</menu>

@@ -49,7 +49,7 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 	private Button btnCancel;
 
 	/**
-	 * Called when the activity is first created.
+	 * @see android.app.Activity#onCreate(android.os.Bundle)
 	 */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -65,15 +65,15 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 		ds = new ServerDataSource(this);
 		listServers = ds.getAllServers();
 
+		// Setup accounts spinner
+		spnServers = (Spinner) findViewById(R.id.spn_servers);
+		spnServers.setOnItemSelectedListener(this);
+
 		// Setup accounts spinner adapter
 		serverAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
 		serverAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		fillServerAdapter(-1);
-
-		// Setup accounts spinner
-		spnServers = (Spinner) findViewById(R.id.spn_servers);
 		spnServers.setAdapter(serverAdapter);
-		spnServers.setOnItemSelectedListener(this);
+		fillServerAdapter(-1);
 	}
 
 	/**
@@ -216,97 +216,104 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 
 	/**
 	 * 
-	 * @param message
-	 */
-	private void showValidationErrorMessage(String message) {
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setMessage(message);
-		builder.setCancelable(true);
-		builder.setNeutralButton("Close", null);
-		builder.create().show();
-	}
-
-	/**
-	 * 
 	 */
 	private void onSave() {
 		Server server;
 
-		// Id
-		int selectedIndex = spnServers.getSelectedItemPosition();
-		if (selectedIndex == 0) {
-			server = new Server();
-			server.setId(-1);
-		} else {
-			server = listServers.get(selectedIndex - 1);
+		/**
+		 * 
+		 * @author abachar
+		 */
+		class ValidationException extends Exception {
+			/** serialVersionUID */
+			private static final long serialVersionUID = 1L;
+			/** Id string error */
+			int messageId;
+
+			/** */
+			public ValidationException(int messageId) {
+				this.messageId = messageId;
+			}
 		}
 
-		// Server name
-		String val = txtServerName.getText().toString().trim();
-		if (val.isEmpty()) {
-			showValidationErrorMessage("Server name is required");
-		} else {
-			server.setName(val);
-		}
-
-		// Server host
-		val = txtServerHost.getText().toString().trim();
-		if (val.isEmpty()) {
-			showValidationErrorMessage("Server host is required");
-		} else {
-			server.setHost(val);
-		}
-
-		// Server port
-		val = txtServerPort.getText().toString().trim();
-		if (val.isEmpty()) {
-			showValidationErrorMessage("Server port is required");
-		} else {
-			server.setPort(Integer.valueOf(val));
-		}
-
-		// Logon type
-		if (rdoLogonTypeAnonymous.isChecked()) {
-			server.setLogontype(Server.ANONYMOUS_LOGON_TYPE);
-			server.setUsername(null);
-			server.setPassword(null);
-		} else {
-			server.setLogontype(Server.NORMAL_LOGON_TYPE);
-
-			// Server username
-			val = txtServerUsername.getText().toString().trim();
-			if (val.isEmpty()) {
-				showValidationErrorMessage("Server username is required");
+		try {
+			// Id
+			int selectedIndex = spnServers.getSelectedItemPosition();
+			if (selectedIndex == 0) {
+				server = new Server();
+				server.setId(-1);
 			} else {
-				server.setUsername(val);
+				server = listServers.get(selectedIndex - 1);
 			}
 
-			// Server password
-			val = txtServerPassword.getText().toString().trim();
+			// Server name
+			String val = txtServerName.getText().toString().trim();
 			if (val.isEmpty()) {
-				showValidationErrorMessage("Server password is required");
+				throw new ValidationException(R.string.server_manager_error_name_required);
+			}
+			server.setName(val);
+
+			// Server host
+			val = txtServerHost.getText().toString().trim();
+			if (val.isEmpty()) {
+				throw new ValidationException(R.string.server_manager_error_host_required);
+			}
+			server.setHost(val);
+
+			// Server port
+			val = txtServerPort.getText().toString().trim();
+			if (val.isEmpty()) {
+				throw new ValidationException(R.string.server_manager_error_port_required);
+			}
+			server.setPort(Integer.valueOf(val));
+
+			// Logon type
+			if (rdoLogonTypeAnonymous.isChecked()) {
+				server.setLogontype(Server.ANONYMOUS_LOGON_TYPE);
+				server.setUsername(null);
+				server.setPassword(null);
 			} else {
+				server.setLogontype(Server.NORMAL_LOGON_TYPE);
+
+				// Server username
+				val = txtServerUsername.getText().toString().trim();
+				if (val.isEmpty()) {
+					throw new ValidationException(R.string.server_manager_error_username_required);
+				}
+				server.setUsername(val);
+
+				// Server password
+				val = txtServerPassword.getText().toString().trim();
+				if (val.isEmpty()) {
+					throw new ValidationException(R.string.server_manager_error_password_required);
+				}
 				server.setPassword(val);
 			}
-		}
 
-		// Save to database
-		ds.saveServer(server);
-		if (selectedIndex == 0) {
-			listServers.add(server);
-		}
-
-		// Sort the new list
-		Collections.sort(listServers, new Comparator<Server>() {
-			@Override
-			public int compare(Server lhs, Server rhs) {
-				return lhs.getName().toLowerCase().compareTo(rhs.getName().toLowerCase());
+			// Save to database
+			ds.saveServer(server);
+			if (selectedIndex == 0) {
+				listServers.add(server);
 			}
-		});
 
-		// Update adapter
-		fillServerAdapter(server.getId());
+			// Sort the new list
+			Collections.sort(listServers, new Comparator<Server>() {
+				@Override
+				public int compare(Server lhs, Server rhs) {
+					return lhs.getName().toLowerCase().compareTo(rhs.getName().toLowerCase());
+				}
+			});
+
+			// Update adapter
+			fillServerAdapter(server.getId());
+
+		} catch (ValidationException ex) {
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setMessage(getString(ex.messageId));
+			builder.setCancelable(true);
+			builder.setNeutralButton("Close", null);
+			builder.create().show();
+		}
 	}
 
 	/**
