@@ -6,12 +6,8 @@ package net.abachar.androftp.servers;
  */
 public class Server {
 
-	/** */
+	/** Default ftp port */
 	public static final int DEFAULT_PORT = 21;
-
-	/** Longon types */
-	public static final int ANONYMOUS_LOGON_TYPE = 0;
-	public static final int NORMAL_LOGON_TYPE = 1;
 
 	/** Site unique ID */
 	private long id;
@@ -26,7 +22,7 @@ public class Server {
 	private int port;
 
 	/** Longon type */
-	private int logontype; // anonymous | normal
+	private Logontype logontype;
 
 	/** Site username */
 	private String username;
@@ -40,7 +36,7 @@ public class Server {
 	public Server() {
 		id = -1;
 		port = DEFAULT_PORT;
-		logontype = ANONYMOUS_LOGON_TYPE;
+		logontype = Logontype.NORMAL;
 	}
 
 	/**
@@ -106,7 +102,7 @@ public class Server {
 	/**
 	 * @return the logontype
 	 */
-	public int getLogontype() {
+	public Logontype getLogontype() {
 		return logontype;
 	}
 
@@ -114,7 +110,7 @@ public class Server {
 	 * @param logontype
 	 *            the logontype to set
 	 */
-	public void setLogontype(int logontype) {
+	public void setLogontype(Logontype logontype) {
 		this.logontype = logontype;
 	}
 

@@ -1,6 +1,12 @@
 package net.abachar.androftp.ui;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import net.abachar.androftp.R;
+import net.abachar.androftp.filelist.FileManager;
+import net.abachar.androftp.filelist.LocalFileManager;
+import net.abachar.androftp.filelist.OrderBy;
 import net.abachar.androftp.ui.fragment.LocalManagerFragment;
 import net.abachar.androftp.ui.fragment.ServerManagerFragment;
 import net.abachar.androftp.ui.fragment.TransferFragment;
@@ -10,7 +16,7 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Environment;
 
 /**
  * 
@@ -18,25 +24,14 @@ import android.util.Log;
  */
 public class MainActivity extends Activity implements ActionBar.TabListener {
 
-	/**
-	 * Current selected tab
-	 */
-	private class TabTag {
-		//int index;
-		String key;
-		String className;
-
-		TabTag(int index, String className) {
-			//this.index = index;
-			this.key = "andro-ftp-tab-index-" + index;
-			this.className = className;
-		}
-	}
-
+	/** Tab indexs and selected tab index */
 	public final static int LOCAL_MANAGER_TAB = 0;
 	public final static int SERVER_MANAGER_TAB = 1;
 	public final static int TRANSFER_MANAGER_TAB = 2;
 	private int selectedTab;
+
+	/** File manages */
+	private LocalFileManager localFileManager;
 
 	/**
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
@@ -47,6 +42,26 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 
 		// Use main view
 		setContentView(R.layout.main);
+		
+		// Create map properties
+		Map<String, String> data = new HashMap<String, String>();
+		if (savedInstanceState != null) {
+			
+		} else {
+
+			// Setup local root directory
+			String path = Environment.getExternalStorageDirectory().getAbsolutePath();
+			data.put("local.rootPath", path);
+			data.put("local.currentPath", path);
+
+			// Setup local and server order
+			data.put("local.orderBy", OrderBy.NAME.toString());
+
+			// Setup selected tab
+			selectedTab = LOCAL_MANAGER_TAB;
+		}
+
+		localFileManager = new LocalFileManager(data);
 
 		// Setup tab
 		ActionBar actionBar = getActionBar();
@@ -118,6 +133,27 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 	 */
 	@Override
 	public void onTabReselected(Tab tab, FragmentTransaction ft) {
-		Log.i("Tab", "onTabReselected");
+	}
+	
+	/**
+	 * @return the localFileManager
+	 */
+	public FileManager getLocalFileManager() {
+		return localFileManager;
+	}
+
+	/**
+	 * Tab tag
+	 */
+	private class TabTag {
+		// int index;
+		String key;
+		String className;
+
+		TabTag(int index, String className) {
+			// this.index = index;
+			this.key = "andro-ftp-tab-index-" + index;
+			this.className = className;
+		}
 	}
 }

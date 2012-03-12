@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import net.abachar.androftp.R;
+import net.abachar.androftp.servers.Logontype;
 import net.abachar.androftp.servers.Server;
 import net.abachar.androftp.servers.ServerDataSource;
 import android.app.Activity;
@@ -173,7 +174,7 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 		intent.putExtra("host", server.getHost());
 		intent.putExtra("port", server.getPort());
 		intent.putExtra("logontype", server.getLogontype());
-		if (server.getLogontype() == Server.NORMAL_LOGON_TYPE) {
+		if (server.getLogontype() == Logontype.NORMAL) {
 			intent.putExtra("username", server.getUsername());
 			intent.putExtra("password", server.getPassword());
 		}
@@ -269,11 +270,11 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 
 			// Logon type
 			if (rdoLogonTypeAnonymous.isChecked()) {
-				server.setLogontype(Server.ANONYMOUS_LOGON_TYPE);
+				server.setLogontype(Logontype.ANONYMOUS);
 				server.setUsername(null);
 				server.setPassword(null);
 			} else {
-				server.setLogontype(Server.NORMAL_LOGON_TYPE);
+				server.setLogontype(Logontype.NORMAL);
 
 				// Server username
 				val = txtServerUsername.getText().toString().trim();
@@ -348,7 +349,7 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 		txtServerHost.setText(server.getHost());
 		txtServerPort.setText(Integer.toString(server.getPort()));
 
-		if (server.getLogontype() == Server.ANONYMOUS_LOGON_TYPE) {
+		if (server.getLogontype() == Logontype.ANONYMOUS) {
 			rdoLogonTypeAnonymous.setChecked(true);
 			rdoLogonTypeNormal.setChecked(false);
 			txtServerUsername.setText("");

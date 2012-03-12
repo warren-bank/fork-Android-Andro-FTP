@@ -74,7 +74,7 @@ public class ServerDataSource extends SQLiteOpenHelper {
 				server.setName(cursor.getString(cursor.getColumnIndex(COLUMN_NAME)));
 				server.setHost(cursor.getString(cursor.getColumnIndex(COLUMN_HOST)));
 				server.setPort(cursor.getInt(cursor.getColumnIndex(COLUMN_PORT)));
-				server.setLogontype(cursor.getInt(cursor.getColumnIndex(COLUMN_LOGONTYPE)));
+				server.setLogontype((cursor.getInt(cursor.getColumnIndex(COLUMN_LOGONTYPE)) == 0) ? Logontype.ANONYMOUS : Logontype.NORMAL);
 				server.setUsername(cursor.getString(cursor.getColumnIndex(COLUMN_USERNAME)));
 				server.setPassword(cursor.getString(cursor.getColumnIndex(COLUMN_PASSWORD)));
 				servers.add(server);
@@ -97,7 +97,7 @@ public class ServerDataSource extends SQLiteOpenHelper {
 		values.put(COLUMN_NAME, server.getName());
 		values.put(COLUMN_HOST, server.getHost());
 		values.put(COLUMN_PORT, server.getPort());
-		values.put(COLUMN_LOGONTYPE, server.getLogontype());
+		values.put(COLUMN_LOGONTYPE, server.getLogontype().ordinal());
 		values.put(COLUMN_USERNAME, server.getUsername());
 		values.put(COLUMN_PASSWORD, server.getPassword());
 
