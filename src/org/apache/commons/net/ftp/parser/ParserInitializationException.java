@@ -46,17 +46,4 @@ public class ParserInitializationException extends RuntimeException {
     public ParserInitializationException(String message, Throwable rootCause) {
         super(message, rootCause);
     }
-
-    /**
-     * returns the root cause of this exception or null
-     * if no root cause was specified.
-     *
-     * @return the root cause of this exception being thrown
-     * @deprecated use {@link #getCause()} instead
-     */
-    @Deprecated
-    public Throwable getRootCause() {
-        return super.getCause();
-    }
-
 }

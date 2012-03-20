@@ -3356,19 +3356,6 @@ implements Configurable
     {
         return __autodetectEncoding;
     }
-
-    // DEPRECATED METHODS - for API compatibility only - DO NOT USE
-
-    /**
-     * @deprecated use {@link #getSystemType()} instead
-     */
-    @Deprecated
-    public String getSystemName() throws IOException
-    {
-        if (__systemName == null && FTPReply.isPositiveCompletion(syst()))
-            __systemName = _replyLines.get(_replyLines.size() - 1).substring(4);
-        return __systemName;
-    }
 }
 
 /* Emacs configuration
