@@ -3,29 +3,29 @@ package net.abachar.androftp.filelist;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Map;
+import java.util.List;
+
+import android.os.Bundle;
 
 /**
  * 
  * @author abachar
  */
-public class LocalFileManager extends FileManager {
+public class LocalFileManager extends AbstractFileManager {
 
 	/**
 	 * @see net.abachar.androftp.filelist.FileManager#init(java.util.Map)
 	 */
-	public LocalFileManager(Map<String, String> data) {
-		super(data);
-
-		// Initial paths
-		rootPath = data.get("local.rootPath");
-		String path = data.get("local.currentPath");
-		updateListFiles(path);
+	public LocalFileManager(Bundle bundle) {
+		super(bundle);
 
 		// Initial order
-		orderByComparator = new OrderByComparator(OrderBy.valueOf(data.get("local.orderBy")));
+		orderByComparator = new OrderByComparator((OrderBy) bundle.get("local.orderBy"));
 
+		// Initial paths
+		rootPath = bundle.getString("local.rootPath");
+		String path = bundle.getString("local.currentPath");
+		updateListFiles(path);
 	}
 
 	/**
@@ -52,15 +52,14 @@ public class LocalFileManager extends FileManager {
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.FileManager#updateListFiles(java.util.String)
+	 * @see net.abachar.androftp.filelist.FileManager#loadFiles()
 	 */
 	@Override
-	public void updateListFiles(String path) {
+	protected List<FileEntry> loadFiles() {
 
-		// Update current path
-		currentPath = path;
+		List<FileEntry> files = new ArrayList<FileEntry>();
 
-		// List all files
+		// Load local files
 		File[] list = (new File(currentPath)).listFiles(new FileFilter() {
 
 			@Override
@@ -69,9 +68,6 @@ public class LocalFileManager extends FileManager {
 			}
 		});
 
-		// Update list files
-		files = new ArrayList<FileEntry>();
-
 		// Scan all files
 		if ((list != null) && (list.length > 0)) {
 			for (File sf : list) {
@@ -79,24 +75,13 @@ public class LocalFileManager extends FileManager {
 				df.setName(sf.getName());
 				df.setPath(sf.getAbsolutePath());
 				df.setSize(sf.length());
-				// df.setType(FileType.getFileType(file));
+				df.setType(FileType.fromFile(sf));
 				df.setLastModified(sf.lastModified());
+
 				files.add(df);
 			}
 		}
 
-		// Order
-		Collections.sort(files, orderByComparator);
-	}
-
-	/**
-	 * @see net.abachar.androftp.filelist.FileManager#changeOrderBy(net.abachar.androftp.filelist.OrderBy)
-	 */
-	@Override
-	public void changeOrderBy(OrderBy orderBy) {
-		orderByComparator.orderBy = orderBy;
-		
-		// ReOrder
-		Collections.sort(files, orderByComparator);
+		return files;
 	}
 }

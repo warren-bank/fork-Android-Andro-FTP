@@ -100,7 +100,7 @@ public class FileEntry {
 	 * 
 	 * @return
 	 */
-	public boolean isDirectory() {
+	public boolean isFolder() {
 		return type == FileType.FOLDER;
 	}
 }

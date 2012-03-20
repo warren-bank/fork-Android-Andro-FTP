@@ -1,7 +1,10 @@
 package net.abachar.androftp.ui.fragment;
 
 import net.abachar.androftp.R;
+import net.abachar.androftp.filelist.FileEntry;
 import net.abachar.androftp.filelist.FileManager;
+import net.abachar.androftp.filelist.FileManagerListener;
+import net.abachar.androftp.filelist.OrderBy;
 import net.abachar.androftp.ui.adapter.SmallFileAdapter;
 import net.abachar.androftp.ui.adapter.WideFileAdapter;
 import android.app.Fragment;
@@ -26,17 +29,13 @@ import android.widget.TextView;
  * 
  * @author abachar
  */
-public abstract class AbstractManagerFragment extends Fragment implements OnCheckedChangeListener, OnClickListener, OnItemSelectedListener, OnItemClickListener {
-
-	// /**
-	// * Main activity
-	// */
-	// protected MainActivity mainActivity;
+public abstract class AbstractManagerFragment extends Fragment implements FileManagerListener, OnCheckedChangeListener, OnClickListener, OnItemSelectedListener, OnItemClickListener {
 
 	/**
 	 * File manager
 	 */
-	protected FileManager localFileManager;
+	protected FileManager wideBrowserFileManager;
+	protected FileManager smallBrowserFileManager;
 
 	/**
 	 * Wide browser
@@ -62,15 +61,18 @@ public abstract class AbstractManagerFragment extends Fragment implements OnChec
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-		// Get main activity
-		// mainActivity = (MainActivity) getActivity();
-
 		// Inflate browser view
 		View view = inflater.inflate(R.layout.fragment_browsers, container, false);
 
 		// Initialize user interface
 		initWideBrowserUI(view);
 		initSmallBrowserUI(view);
+
+		// Show files
+		wideBrowserFileManager.addFileManagerListener(this);
+		smallBrowserFileManager.addFileManagerListener(this);
+
+		// Return created view
 		return view;
 	}
 
@@ -86,6 +88,7 @@ public abstract class AbstractManagerFragment extends Fragment implements OnChec
 		// Setup wide explorer go parent button
 		btnWideBrowserGoParent = (ImageButton) view.findViewById(R.id.wide_browser_go_parent);
 		btnWideBrowserGoParent.setOnClickListener(this);
+		btnWideBrowserGoParent.setEnabled(wideBrowserFileManager.isGoParentEnabled());
 
 		// Setup wide explorer current working directory text
 		txtWideBrowserCWD = (TextView) view.findViewById(R.id.wide_browser_cwd);
@@ -114,6 +117,7 @@ public abstract class AbstractManagerFragment extends Fragment implements OnChec
 		// Setup wide explorer go parent button
 		btnSmallBrowserGoParent = (ImageButton) view.findViewById(R.id.small_browser_go_parent);
 		btnSmallBrowserGoParent.setOnClickListener(this);
+		btnSmallBrowserGoParent.setEnabled(smallBrowserFileManager.isGoParentEnabled());
 
 		// Setup wide explorer current working directory text
 		txtSmallBrowserCWD = (TextView) view.findViewById(R.id.small_browser_cwd);
@@ -127,23 +131,41 @@ public abstract class AbstractManagerFragment extends Fragment implements OnChec
 		lsvSmallBrowserListFiles.setAdapter(smallBrowserFileAdapter);
 	}
 
+//	/**
+//	 * @see android.app.Fragment#onHiddenChanged(boolean)
+//	 */
+//	@Override
+//	public void onHiddenChanged(boolean hidden) {
+//		super.onHiddenChanged(hidden);
+//		
+//		// Is became visible
+//		if (!hidden) {
+//			// Update liste files
+//			wideBrowserFileAdapter.setFiles(wideBrowserFileManager.getFiles());
+//			smallBrowserFileAdapter.setFiles(smallBrowserFileManager.getFiles());
+//		}
+//	}
+
 	/**
 	 * @see android.widget.CompoundButton.OnCheckedChangeListener#onCheckedChanged(android.widget.CompoundButton,
 	 *      boolean)
 	 */
 	@Override
 	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-		// handle select all files event
-
+		onWideBrowserSelectAllCheckedChanged(isChecked);
 	}
 
 	/**
 	 * @see android.view.View.OnClickListener#onClick(android.view.View)
 	 */
 	@Override
-	public void onClick(View v) {
-		// onWideBrowserGoParentButtonClick();
-		// onSmallBrowserGoParentButtonClick();
+	public void onClick(View view) {
+
+		if (view == btnWideBrowserGoParent) {
+			onWideBrowserGoParentButtonClick();
+		} else if (view == btnSmallBrowserGoParent) {
+			onSmallBrowserGoParentButtonClick();
+		}
 	}
 
 	/**
@@ -152,7 +174,7 @@ public abstract class AbstractManagerFragment extends Fragment implements OnChec
 	 */
 	@Override
 	public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-		// onUpdateWideBrowserOrderBy(position);
+		onWideBrowserOrderByChange(OrderBy.getByOrdinal(position));
 	}
 
 	/**
@@ -169,7 +191,107 @@ public abstract class AbstractManagerFragment extends Fragment implements OnChec
 	 */
 	@Override
 	public void onItemClick(AdapterView<?> listView, View view, int position, long id) {
-		// onWideBrowserListItemClick(position);
-		// onSmallBrowserListItemClick(position);
+
+		if (listView == lsvWideBrowserListFiles) {
+			onWideBrowserListItemClick(view, position, id);
+			btnWideBrowserGoParent.setEnabled(true);
+		} else if (listView == lsvSmallBrowserListFiles) {
+			onSmallBrowserListItemClick(view, position, id);
+			btnSmallBrowserGoParent.setEnabled(true);
+		}
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.FileManagerListener#onBeginUpdateListFiles(net.abachar.androftp.filelist.FileManager)
+	 */
+	@Override
+	public void onBeginUpdateListFiles(FileManager fm) {
+
+		if (fm == wideBrowserFileManager) {
+			txtWideBrowserCWD.setText(getString(R.string.loading));
+			wideBrowserFileAdapter.setFiles(null);
+			btnWideBrowserGoParent.setEnabled(false);
+			chkWideBrowserSelectAll.setEnabled(false);
+		} else if (fm == smallBrowserFileManager) {
+			txtSmallBrowserCWD.setText(getString(R.string.loading));
+			smallBrowserFileAdapter.setFiles(null);
+			btnSmallBrowserGoParent.setEnabled(false);
+		}
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.FileManagerListener#onEndUpdateListFiles(net.abachar.androftp.filelist.FileManager)
+	 */
+	@Override
+	public void onEndUpdateListFiles(FileManager fm) {
+
+		if (fm == wideBrowserFileManager) {
+			txtWideBrowserCWD.setText(fm.getCurrentPath());
+			wideBrowserFileAdapter.setFiles(fm.getFiles());
+			btnWideBrowserGoParent.setEnabled(wideBrowserFileManager.isGoParentEnabled());
+			chkWideBrowserSelectAll.setEnabled(!fm.getFiles().isEmpty());
+		} else if (fm == smallBrowserFileManager) {
+			txtSmallBrowserCWD.setText(fm.getCurrentPath());
+			smallBrowserFileAdapter.setFiles(fm.getFiles());
+			btnSmallBrowserGoParent.setEnabled(smallBrowserFileManager.isGoParentEnabled());
+		}
+	}
+
+	/**
+	 * 
+	 * @param isChecked
+	 */
+	protected void onWideBrowserSelectAllCheckedChanged(boolean isChecked) {
+		wideBrowserFileAdapter.selectAllFiles(isChecked);
+	}
+
+	/**
+	 * 
+	 */
+	protected void onWideBrowserGoParentButtonClick() {
+		wideBrowserFileManager.goParent();
+	}
+
+	/**
+	 * 
+	 * @param orderBy
+	 */
+	protected void onWideBrowserOrderByChange(OrderBy orderBy) {
+		wideBrowserFileManager.setOrderBy(orderBy);
+	}
+
+	/**
+	 * 
+	 * @param view
+	 * @param position
+	 * @param id
+	 */
+	protected void onWideBrowserListItemClick(View view, int position, long id) {
+
+		FileEntry file = (FileEntry) wideBrowserFileAdapter.getItem(position);
+		if (file.isFolder()) {
+			wideBrowserFileManager.cwd(file.getName());
+		}
+	}
+
+	/**
+	 * 
+	 */
+	protected void onSmallBrowserGoParentButtonClick() {
+		smallBrowserFileManager.goParent();
+	}
+
+	/**
+	 * 
+	 * @param view
+	 * @param position
+	 * @param id
+	 */
+	protected void onSmallBrowserListItemClick(View view, int position, long id) {
+
+		FileEntry file = (FileEntry) smallBrowserFileAdapter.getItem(position);
+		if (file.isFolder()) {
+			smallBrowserFileManager.cwd(file.getName());
+		}
 	}
 }

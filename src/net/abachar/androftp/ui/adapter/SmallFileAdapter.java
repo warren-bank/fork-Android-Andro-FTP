@@ -1,7 +1,5 @@
 package net.abachar.androftp.ui.adapter;
 
-import java.util.List;
-
 import net.abachar.androftp.R;
 import net.abachar.androftp.filelist.FileEntry;
 import android.content.Context;
@@ -21,13 +19,6 @@ public class SmallFileAdapter extends AbstractFileAdapter {
 	 */
 	public SmallFileAdapter(Context context) {
 		super(context);
-	}
-	
-	/**
-	 *
-	 */
-	public SmallFileAdapter(Context context, List<FileEntry> files) {
-		super(context, files);
 	}
 
 	/**
@@ -49,7 +40,7 @@ public class SmallFileAdapter extends AbstractFileAdapter {
 		}
 
 		FileEntry file = files.get(position);
-		// holder.icon.setImageDrawable(file.getInstance().getIconFor(fileInfo.getFileType()));
+		holder.icon.setImageDrawable(file.getType().getIcon());
 		holder.name.setText(file.getName());
 
 		return convertView;

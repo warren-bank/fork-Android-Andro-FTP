@@ -1,15 +1,11 @@
 package net.abachar.androftp.ui;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import net.abachar.androftp.R;
+import net.abachar.androftp.filelist.FTPFileManager;
 import net.abachar.androftp.filelist.FileManager;
 import net.abachar.androftp.filelist.LocalFileManager;
 import net.abachar.androftp.filelist.OrderBy;
-import net.abachar.androftp.ui.fragment.LocalManagerFragment;
-import net.abachar.androftp.ui.fragment.ServerManagerFragment;
-import net.abachar.androftp.ui.fragment.TransferFragment;
+import net.abachar.androftp.servers.Logontype;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.Activity;
@@ -25,13 +21,11 @@ import android.os.Environment;
 public class MainActivity extends Activity implements ActionBar.TabListener {
 
 	/** Tab indexs and selected tab index */
-	public final static int LOCAL_MANAGER_TAB = 0;
-	public final static int SERVER_MANAGER_TAB = 1;
-	public final static int TRANSFER_MANAGER_TAB = 2;
-	private int selectedTab;
+	private TabId selectedTab;
 
 	/** File manages */
-	private LocalFileManager localFileManager;
+	private FileManager localFileManager;
+	private FileManager serverFileManager;
 
 	/**
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
@@ -43,27 +37,55 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 		// Use main view
 		setContentView(R.layout.main);
 		
+		getIntent().putExtra("host", "localhost");
+		getIntent().putExtra("port", 21);
+		getIntent().putExtra("logontype", Logontype.NORMAL);
+		getIntent().putExtra("username", "abachar");
+		getIntent().putExtra("password", "z6tonbjn");
+		
 		// Create map properties
-		Map<String, String> data = new HashMap<String, String>();
+		Bundle bundle = new Bundle();
 		if (savedInstanceState != null) {
 			
 		} else {
 
 			// Setup local root directory
 			String path = Environment.getExternalStorageDirectory().getAbsolutePath();
-			data.put("local.rootPath", path);
-			data.put("local.currentPath", path);
+			bundle.putString("local.rootPath", path);
+			bundle.putString("local.currentPath", path);
+			
+			// Server data
+			Bundle intentExtras = getIntent().getExtras();
+			bundle.putString("server.host", intentExtras.getString("host"));
+			bundle.putInt("server.port", intentExtras.getInt("port"));
+			Logontype logontype = (Logontype) intentExtras.get("logontype");
+			bundle.putSerializable("server.logontype", logontype);
+			if (logontype == Logontype.NORMAL) {
+				bundle.putString("server.username", bundle.getString("username"));
+				bundle.putString("server.password", bundle.getString("password"));
+			}
 
 			// Setup local and server order
-			data.put("local.orderBy", OrderBy.NAME.toString());
+			bundle.putSerializable("local.orderBy", OrderBy.NAME);
+			bundle.putSerializable("server.orderBy", OrderBy.NAME);
 
 			// Setup selected tab
-			selectedTab = LOCAL_MANAGER_TAB;
+			selectedTab = TabId.LOCAL_MANAGER;
 		}
 
-		localFileManager = new LocalFileManager(data);
+		// File managers
+		localFileManager = new LocalFileManager(bundle);
+		serverFileManager = new FTPFileManager(bundle);
 
-		// Setup tab
+		// Setup actionbar
+		setupActionBar();
+	}
+	
+	/**
+	 * 
+	 */
+	private void setupActionBar() {
+		
 		ActionBar actionBar = getActionBar();
 		// actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM |
 		// ActionBar.DISPLAY_USE_LOGO);
@@ -72,12 +94,13 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 		actionBar.setDisplayShowTitleEnabled(false);
 
 		// Create local tab
-		createTab(LOCAL_MANAGER_TAB, LocalManagerFragment.class.getName(), R.string.main_tab_local);
-		createTab(SERVER_MANAGER_TAB, ServerManagerFragment.class.getName(), R.string.main_tab_server);
-		createTab(TRANSFER_MANAGER_TAB, TransferFragment.class.getName(), R.string.main_tab_transfers);
+		createTab(TabId.LOCAL_MANAGER);
+		createTab(TabId.SERVER_MANAGER);
+		createTab(TabId.TRANSFER_MANAGER);
+		createTab(TabId.CONSOLE);
 
 		// Set selected tab
-		actionBar.setSelectedNavigationItem(selectedTab);
+		actionBar.setSelectedNavigationItem(selectedTab.ordinal());
 	}
 
 	/**
@@ -86,13 +109,13 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 	 * @param className
 	 * @param textId
 	 */
-	private void createTab(int index, String className, int textId) {
+	private void createTab(TabId tabId) {
 
 		ActionBar actionBar = getActionBar();
 		ActionBar.Tab tab = actionBar.newTab();
 
-		tab.setText(getString(textId));
-		tab.setTag(new TabTag(index, className));
+		tab.setText(getString(tabId.getTextId()));
+		tab.setTag(new TabTag(tabId));
 		tab.setTabListener(this);
 
 		actionBar.addTab(tab);
@@ -134,12 +157,19 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 	@Override
 	public void onTabReselected(Tab tab, FragmentTransaction ft) {
 	}
-	
+
 	/**
 	 * @return the localFileManager
 	 */
 	public FileManager getLocalFileManager() {
 		return localFileManager;
+	}
+
+	/**
+	 * @return the serverFileManager
+	 */
+	public FileManager getServerFileManager() {
+		return serverFileManager;
 	}
 
 	/**
@@ -150,10 +180,10 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 		String key;
 		String className;
 
-		TabTag(int index, String className) {
+		TabTag(TabId tabId) {
 			// this.index = index;
-			this.key = "andro-ftp-tab-index-" + index;
-			this.className = className;
+			this.key = "andro-ftp-tab-index-" + tabId.ordinal();
+			this.className = tabId.getClazz().getName();
 		}
 	}
 }

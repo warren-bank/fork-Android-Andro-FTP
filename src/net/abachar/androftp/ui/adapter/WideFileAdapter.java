@@ -2,7 +2,6 @@ package net.abachar.androftp.ui.adapter;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 
 import net.abachar.androftp.R;
 import net.abachar.androftp.filelist.FileEntry;
@@ -27,13 +26,6 @@ public class WideFileAdapter extends AbstractFileAdapter {
 	}
 
 	/**
-	 *
-	 */
-	public WideFileAdapter(Context context, List<FileEntry> files) {
-		super(context, files);
-	}
-
-	/**
 	 * @see android.widget.Adapter#getView(int, android.view.View,
 	 *      android.view.ViewGroup)
 	 */
@@ -55,13 +47,13 @@ public class WideFileAdapter extends AbstractFileAdapter {
 		}
 
 		FileEntry file = files.get(position);
-		// holder.checkbox.setChecked(file.isChecked());
-		// holder.fileIcon.setImageDrawable(FileIcons.getInstance().getIconFor(fileInfo.getFileType()));
+		holder.checkbox.setChecked(checkStates.get(position));
+		holder.icon.setImageDrawable(file.getType().getIcon());
 		holder.name.setText(file.getName());
 		holder.lastModified.setText(new SimpleDateFormat("dd/MM/yyyy hh:mm").format(new Date(file.getLastModified())));
 
 		// File size
-		if (!file.isDirectory()) {
+		if (!file.isFolder()) {
 			long size = file.getSize();
 			if (size < 1024) {
 				holder.size.setText(size + " o");

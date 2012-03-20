@@ -1,6 +1,6 @@
 package net.abachar.androftp.ui.adapter;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import net.abachar.androftp.filelist.FileEntry;
@@ -18,38 +18,36 @@ import android.widget.TextView;
  */
 public abstract class AbstractFileAdapter extends BaseAdapter implements ListAdapter {
 
-	/**
-	 * List of visible files and directories
-	 */
-	protected List<FileEntry> files;
-
-	/** */
+	/** Layout inflater service */
 	protected LayoutInflater inflater;
+
+	/** List of visible files and directories */
+	protected List<FileEntry> files;
+	protected List<Boolean> checkStates;
 
 	/**
 	 *
 	 */
 	public AbstractFileAdapter(Context context) {
-		this(context, new ArrayList<FileEntry>());
-	}
-
-	/**
-	 *
-	 */
-	public AbstractFileAdapter(Context context, List<FileEntry> files) {
 
 		// Inflater
 		inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 		// Build list of files
-		this.files = files;
+		this.files = null;
+		this.checkStates = null;
 	}
 
 	/**
 	 * 
 	 */
-	public void chanegListFiles(List<FileEntry> files) {
+	public void setFiles(List<FileEntry> files) {
 		this.files = files;
+		if (files != null) {
+			this.checkStates = Collections.nCopies(files.size(), Boolean.FALSE);
+		} else {
+			this.checkStates = null;
+		}
 		notifyDataSetChanged();
 	}
 
@@ -58,7 +56,7 @@ public abstract class AbstractFileAdapter extends BaseAdapter implements ListAda
 	 */
 	@Override
 	public int getCount() {
-		return files.size();
+		return (files != null) ? files.size() : 0;
 	}
 
 	/**
@@ -75,6 +73,15 @@ public abstract class AbstractFileAdapter extends BaseAdapter implements ListAda
 	@Override
 	public long getItemId(int position) {
 		return position;
+	}
+
+	/**
+	 * 
+	 * @param isChecked
+	 */
+	public void selectAllFiles(boolean isChecked) {
+		this.checkStates = Collections.nCopies(files.size(), new Boolean(isChecked));
+		notifyDataSetChanged();
 	}
 
 	/**
