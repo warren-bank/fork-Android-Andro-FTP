@@ -2,6 +2,8 @@ package net.abachar.androftp.filelist;
 
 import java.util.List;
 
+import android.os.Bundle;
+
 /**
  * 
  * @author abachar
@@ -9,38 +11,42 @@ import java.util.List;
 public interface FileManager {
 
 	/**
-	 * 
+	 * Initialize file manager
+	 */
+	public void init(Bundle bundle);
+
+	/**
+	 * Install listner
 	 */
 	public void addFileManagerListener(FileManagerListener listener);
 
 	/**
-	 * 
+	 * Go to parent directory
 	 */
 	public void goParent();
 
 	/**
-	 * 
+	 * Change working directory
 	 */
 	public void cwd(String name);
 
 	/**
-	 * 
+	 * Change files order by
 	 */
 	public void setOrderBy(final OrderBy orderBy);
 
 	/**
-	 * 
-	 * @return
+	 * @return true if can go parent directory
 	 */
 	public boolean isGoParentEnabled();
 
 	/**
-	 * @return the files
+	 * @return files list
 	 */
 	public List<FileEntry> getFiles();
-	
+
 	/**
-	 * @return the currentPath
+	 * @return the current path
 	 */
 	public String getCurrentPath();
 }

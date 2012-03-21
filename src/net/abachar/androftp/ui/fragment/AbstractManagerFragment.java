@@ -229,7 +229,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 			txtWideBrowserCWD.setText(fm.getCurrentPath());
 			wideBrowserFileAdapter.setFiles(fm.getFiles());
 			btnWideBrowserGoParent.setEnabled(wideBrowserFileManager.isGoParentEnabled());
-			chkWideBrowserSelectAll.setEnabled(!fm.getFiles().isEmpty());
+			chkWideBrowserSelectAll.setEnabled((fm.getFiles() != null) && !fm.getFiles().isEmpty());
 		} else if (fm == smallBrowserFileManager) {
 			txtSmallBrowserCWD.setText(fm.getCurrentPath());
 			smallBrowserFileAdapter.setFiles(fm.getFiles());

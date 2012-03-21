@@ -11,6 +11,7 @@ import net.abachar.androftp.servers.ServerDataSource;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -28,6 +29,10 @@ import android.widget.Toast;
  * @author abachar
  */
 public class ServerManagerActivity extends Activity implements OnClickListener, OnItemSelectedListener {
+	
+	/** */
+	private static final String PREFS_NAME = "AndroFTPPrefsFile";
+	private SharedPreferences settings;
 
 	/** Datasource */
 	private ServerDataSource ds;
@@ -58,6 +63,9 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 
 		// Use server_manager view
 		setContentView(R.layout.server_manager);
+		
+		// Load settings
+		settings = getSharedPreferences(PREFS_NAME, 0);
 
 		// Initialize user interface
 		initUI();
@@ -74,7 +82,12 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 		serverAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
 		serverAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spnServers.setAdapter(serverAdapter);
-		fillServerAdapter(-1);
+		
+		Long lastSelectedServer = settings.getLong("lastSelectedServer", -1);
+		fillServerAdapter(lastSelectedServer);
+		if (lastSelectedServer != -1) {
+			btnConnect.requestFocus();
+		}
 	}
 
 	/**
@@ -171,6 +184,13 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 
 		// Server data
 		Server server = listServers.get(spnServers.getSelectedItemPosition() - 1);
+		
+		// Save 
+		SharedPreferences.Editor editor = settings.edit();
+		editor.putLong("lastSelectedServer", server.getId());
+		editor.commit();
+
+		// Start activity
 		intent.putExtra("host", server.getHost());
 		intent.putExtra("port", server.getPort());
 		intent.putExtra("logontype", server.getLogontype());
@@ -178,8 +198,6 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 			intent.putExtra("username", server.getUsername());
 			intent.putExtra("password", server.getPassword());
 		}
-
-		// Start activity
 		startActivity(intent);
 	}
 

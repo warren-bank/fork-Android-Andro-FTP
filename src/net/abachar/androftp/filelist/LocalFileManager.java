@@ -14,18 +14,30 @@ import android.os.Bundle;
 public class LocalFileManager extends AbstractFileManager {
 
 	/**
-	 * @see net.abachar.androftp.filelist.FileManager#init(java.util.Map)
+	 * Default constructor
 	 */
-	public LocalFileManager(Bundle bundle) {
-		super(bundle);
+	public LocalFileManager() {
+		super();
+	}
+	
+	/**
+	 * @see net.abachar.androftp.filelist.FileManager#init(android.os.Bundle)
+	 */
+	@Override
+	public void init(Bundle bundle) {
+		super.init(bundle);
 
 		// Initial order
-		orderByComparator = new OrderByComparator((OrderBy) bundle.get("local.orderBy"));
+		if (bundle.containsKey("local.orderBy")) {
+			orderByComparator = new OrderByComparator((OrderBy) bundle.get("local.orderBy"));
+		}
 
 		// Initial paths
 		rootPath = bundle.getString("local.rootPath");
-		String path = bundle.getString("local.currentPath");
-		updateListFiles(path);
+		currentPath = bundle.getString("local.currentPath");
+
+		// Update list files
+		updateListFiles(true);
 	}
 
 	/**
@@ -35,7 +47,8 @@ public class LocalFileManager extends AbstractFileManager {
 	public void goParent() {
 
 		// refresh list files
-		updateListFiles(paths.pop());
+		currentPath = paths.pop();
+		updateListFiles(true);
 	}
 
 	/**
@@ -48,7 +61,8 @@ public class LocalFileManager extends AbstractFileManager {
 		paths.push(currentPath);
 
 		// refresh list files
-		updateListFiles(currentPath + File.separator + name);
+		currentPath = currentPath + File.separator + name;
+		updateListFiles(true);
 	}
 
 	/**
@@ -56,8 +70,7 @@ public class LocalFileManager extends AbstractFileManager {
 	 */
 	@Override
 	protected List<FileEntry> loadFiles() {
-
-		List<FileEntry> files = new ArrayList<FileEntry>();
+		List<FileEntry> files = null;
 
 		// Load local files
 		File[] list = (new File(currentPath)).listFiles(new FileFilter() {
@@ -70,6 +83,7 @@ public class LocalFileManager extends AbstractFileManager {
 
 		// Scan all files
 		if ((list != null) && (list.length > 0)) {
+			files = new ArrayList<FileEntry>();
 			for (File sf : list) {
 				FileEntry df = new FileEntry();
 				df.setName(sf.getName());

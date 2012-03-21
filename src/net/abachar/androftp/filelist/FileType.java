@@ -3,6 +3,8 @@ package net.abachar.androftp.filelist;
 import java.io.File;
 import java.util.HashMap;
 
+import org.apache.commons.net.ftp.FTPFile;
+
 import net.abachar.androftp.Application;
 import net.abachar.androftp.R;
 import android.graphics.drawable.Drawable;
@@ -78,9 +80,30 @@ public enum FileType {
 		if (file.isDirectory()) {
 			return FOLDER;
 		}
+		return fromFileName(file.getName());
+	}
+	
+	/**
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public static FileType fromFTPFile(FTPFile file) {
+
+		if (file.isDirectory()) {
+			return FOLDER;
+		}
+		return fromFileName(file.getName());
+	}
+	
+	/**
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public static FileType fromFileName(String fileName) {
 
 		// Get extension
-		String fileName = file.getName();
 		int lastDot = fileName.lastIndexOf('.');
 		if (lastDot < 0) {
 			return UNKNOWN;

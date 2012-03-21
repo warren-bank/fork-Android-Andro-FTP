@@ -47,11 +47,27 @@ public abstract class AbstractFileManager implements FileManager {
 	protected Stack<String> paths;
 
 	/**
-	 * @see net.abachar.androftp.filelist.AbstractFileManager#init(java.util.Map)
+	 * Default constructor
 	 */
-	public AbstractFileManager(Bundle bundle) {
+	public AbstractFileManager() {
+		// Paths
 		paths = new Stack<String>();
+		
+		// Listners
 		listeners = new ArrayList<FileManagerListener>();
+		
+		// Default order by
+		orderByComparator = new OrderByComparator(OrderBy.NAME);
+		
+		// No files
+		files = null;
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.FileManager#init(android.os.Bundle)
+	 */
+	@Override
+	public void init(Bundle bundle) {
 	}
 
 	/**
@@ -67,21 +83,12 @@ public abstract class AbstractFileManager implements FileManager {
 	/**
 	 *
 	 */
-	protected void updateListFiles(final String path) {
+	protected void updateListFiles(final boolean reload) {
 		final FileManager fm = this;
 
 		// Load list files in separate thread
 		new Thread(new Runnable() {
 			public void run() {
-
-				// Update current path
-				boolean reload;
-				if (path.equals(currentPath)) {
-					reload = false;
-				} else {
-					currentPath = path;
-					reload = true;
-				}
 
 				// Notify listner
 				if (!listeners.isEmpty()) {
@@ -91,18 +98,15 @@ public abstract class AbstractFileManager implements FileManager {
 					handler.sendMessage(msg);
 				}
 
-				try {
-					Thread.sleep(2000);
-				} catch (InterruptedException e) {
-				}
-
 				// List all files
 				if (reload) {
 					files = loadFiles();
 				}
 
 				// Order
-				Collections.sort(files, orderByComparator);
+				if ((files != null) && !files.isEmpty()) {
+					Collections.sort(files, orderByComparator);
+				}
 
 				// Notify listner
 				if (!listeners.isEmpty()) {
@@ -129,7 +133,7 @@ public abstract class AbstractFileManager implements FileManager {
 		orderByComparator.orderBy = orderBy;
 
 		// refresh list files with same path
-		updateListFiles(currentPath);
+		updateListFiles(false);
 	}
 
 	/**
@@ -138,6 +142,9 @@ public abstract class AbstractFileManager implements FileManager {
 	public void addFileManagerListener(FileManagerListener listener) {
 		if (!listeners.contains(listener)) {
 			listeners.add(listener);
+
+			// Notify new added listner
+			listener.onEndUpdateListFiles(this);
 		}
 	}
 
@@ -221,22 +228,30 @@ public abstract class AbstractFileManager implements FileManager {
 
 			// Order by type
 			if (orderBy == OrderBy.TYPE) {
-				return lhs.getType().compareTo(rhs.getType());
+				int ret = lhs.getType().compareTo(rhs.getType());
+				if (ret != 0) {
+					return ret;
+				}
 			}
 
 			// Order by time
 			if (orderBy == OrderBy.TIME) {
-				if (lhs.getLastModified() > rhs.getLastModified()) {
-					return 1;
-				}
 				if (lhs.getLastModified() < rhs.getLastModified()) {
 					return -1;
+				}
+				if (lhs.getLastModified() > rhs.getLastModified()) {
+					return 1;
 				}
 			}
 
 			// Order by size
 			if (orderBy == OrderBy.SIZE) {
-				return (lhs.getSize() < rhs.getSize() ? -1 : (lhs.getSize() == rhs.getSize() ? 0 : 1));
+				if (lhs.getSize() < rhs.getSize()) {
+					return -1;
+				}
+				if (lhs.getSize() > rhs.getSize()) {
+					return 1;
+				}
 			}
 
 			// orderBy == ORDER_BY_NAME

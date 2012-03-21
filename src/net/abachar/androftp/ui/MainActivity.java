@@ -11,6 +11,7 @@ import android.app.ActionBar.Tab;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.os.Environment;
 
@@ -37,14 +38,8 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 		// Use main view
 		setContentView(R.layout.main);
 		
-		getIntent().putExtra("host", "localhost");
-		getIntent().putExtra("port", 21);
-		getIntent().putExtra("logontype", Logontype.NORMAL);
-		getIntent().putExtra("username", "abachar");
-		getIntent().putExtra("password", "z6tonbjn");
-		
 		// Create map properties
-		Bundle bundle = new Bundle();
+		final Bundle bundle = new Bundle();
 		if (savedInstanceState != null) {
 			
 		} else {
@@ -61,8 +56,8 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 			Logontype logontype = (Logontype) intentExtras.get("logontype");
 			bundle.putSerializable("server.logontype", logontype);
 			if (logontype == Logontype.NORMAL) {
-				bundle.putString("server.username", bundle.getString("username"));
-				bundle.putString("server.password", bundle.getString("password"));
+				bundle.putString("server.username", intentExtras.getString("username"));
+				bundle.putString("server.password", intentExtras.getString("password"));
 			}
 
 			// Setup local and server order
@@ -74,8 +69,22 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 		}
 
 		// File managers
-		localFileManager = new LocalFileManager(bundle);
-		serverFileManager = new FTPFileManager(bundle);
+		localFileManager = new LocalFileManager();
+		serverFileManager = new FTPFileManager();
+
+		final ProgressDialog progressDialog = ProgressDialog.show(this, "Authentification", "Please wait...", true);
+		new Thread(new Runnable() {
+			public void run() {
+				localFileManager.init(bundle);
+				serverFileManager.init(bundle);
+				
+				runOnUiThread(new Runnable() {
+					public void run() {
+						progressDialog.dismiss();
+					}
+				});
+			}
+		}).start();
 
 		// Setup actionbar
 		setupActionBar();
