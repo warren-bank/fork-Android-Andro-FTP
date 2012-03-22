@@ -4,6 +4,7 @@ import net.abachar.androftp.R;
 import net.abachar.androftp.filelist.FileEntry;
 import net.abachar.androftp.filelist.FileManager;
 import net.abachar.androftp.filelist.FileManagerListener;
+import net.abachar.androftp.filelist.FileManagerMessage;
 import net.abachar.androftp.filelist.OrderBy;
 import net.abachar.androftp.ui.adapter.SmallFileAdapter;
 import net.abachar.androftp.ui.adapter.WideFileAdapter;
@@ -88,7 +89,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 		// Setup wide explorer go parent button
 		btnWideBrowserGoParent = (ImageButton) view.findViewById(R.id.wide_browser_go_parent);
 		btnWideBrowserGoParent.setOnClickListener(this);
-		btnWideBrowserGoParent.setEnabled(wideBrowserFileManager.isGoParentEnabled());
+		btnWideBrowserGoParent.setEnabled(wideBrowserFileManager.canGoParent());
 
 		// Setup wide explorer current working directory text
 		txtWideBrowserCWD = (TextView) view.findViewById(R.id.wide_browser_cwd);
@@ -117,7 +118,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 		// Setup wide explorer go parent button
 		btnSmallBrowserGoParent = (ImageButton) view.findViewById(R.id.small_browser_go_parent);
 		btnSmallBrowserGoParent.setOnClickListener(this);
-		btnSmallBrowserGoParent.setEnabled(smallBrowserFileManager.isGoParentEnabled());
+		btnSmallBrowserGoParent.setEnabled(smallBrowserFileManager.canGoParent());
 
 		// Setup wide explorer current working directory text
 		txtSmallBrowserCWD = (TextView) view.findViewById(R.id.small_browser_cwd);
@@ -130,21 +131,6 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 		smallBrowserFileAdapter = new SmallFileAdapter(getActivity());
 		lsvSmallBrowserListFiles.setAdapter(smallBrowserFileAdapter);
 	}
-
-//	/**
-//	 * @see android.app.Fragment#onHiddenChanged(boolean)
-//	 */
-//	@Override
-//	public void onHiddenChanged(boolean hidden) {
-//		super.onHiddenChanged(hidden);
-//		
-//		// Is became visible
-//		if (!hidden) {
-//			// Update liste files
-//			wideBrowserFileAdapter.setFiles(wideBrowserFileManager.getFiles());
-//			smallBrowserFileAdapter.setFiles(smallBrowserFileManager.getFiles());
-//		}
-//	}
 
 	/**
 	 * @see android.widget.CompoundButton.OnCheckedChangeListener#onCheckedChanged(android.widget.CompoundButton,
@@ -202,38 +188,39 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.FileManagerListener#onBeginUpdateListFiles(net.abachar.androftp.filelist.FileManager)
+	 * @see net.abachar.androftp.filelist.FileManagerListener#onUpdateListFiles(net.abachar.androftp.filelist.FileManager,
+	 *      net.abachar.androftp.filelist.FileManagerMessage)
 	 */
 	@Override
-	public void onBeginUpdateListFiles(FileManager fm) {
+	public void onUpdateListFiles(FileManager fm, FileManagerMessage msg) {
 
-		if (fm == wideBrowserFileManager) {
-			txtWideBrowserCWD.setText(getString(R.string.loading));
-			wideBrowserFileAdapter.setFiles(null);
-			btnWideBrowserGoParent.setEnabled(false);
-			chkWideBrowserSelectAll.setEnabled(false);
-		} else if (fm == smallBrowserFileManager) {
-			txtSmallBrowserCWD.setText(getString(R.string.loading));
-			smallBrowserFileAdapter.setFiles(null);
-			btnSmallBrowserGoParent.setEnabled(false);
-		}
-	}
+		switch (msg) {
+			case BEGIN_UPDATE_LIST_FILES:
+				if (fm == wideBrowserFileManager) {
+					txtWideBrowserCWD.setText(getString(R.string.loading));
+					wideBrowserFileAdapter.setFiles(null);
+					btnWideBrowserGoParent.setEnabled(false);
+					chkWideBrowserSelectAll.setEnabled(false);
+				} else if (fm == smallBrowserFileManager) {
+					txtSmallBrowserCWD.setText(getString(R.string.loading));
+					smallBrowserFileAdapter.setFiles(null);
+					btnSmallBrowserGoParent.setEnabled(false);
+				}
+				break;
 
-	/**
-	 * @see net.abachar.androftp.filelist.FileManagerListener#onEndUpdateListFiles(net.abachar.androftp.filelist.FileManager)
-	 */
-	@Override
-	public void onEndUpdateListFiles(FileManager fm) {
-
-		if (fm == wideBrowserFileManager) {
-			txtWideBrowserCWD.setText(fm.getCurrentPath());
-			wideBrowserFileAdapter.setFiles(fm.getFiles());
-			btnWideBrowserGoParent.setEnabled(wideBrowserFileManager.isGoParentEnabled());
-			chkWideBrowserSelectAll.setEnabled((fm.getFiles() != null) && !fm.getFiles().isEmpty());
-		} else if (fm == smallBrowserFileManager) {
-			txtSmallBrowserCWD.setText(fm.getCurrentPath());
-			smallBrowserFileAdapter.setFiles(fm.getFiles());
-			btnSmallBrowserGoParent.setEnabled(smallBrowserFileManager.isGoParentEnabled());
+			case INITIAL_LIST_FILES:
+			case END_UPDATE_LIST_FILES:
+				if (fm == wideBrowserFileManager) {
+					txtWideBrowserCWD.setText(fm.getCurrentPath());
+					wideBrowserFileAdapter.setFiles(fm.getFiles());
+					btnWideBrowserGoParent.setEnabled(wideBrowserFileManager.canGoParent());
+					chkWideBrowserSelectAll.setEnabled((fm.getFiles() != null) && !fm.getFiles().isEmpty());
+				} else if (fm == smallBrowserFileManager) {
+					txtSmallBrowserCWD.setText(fm.getCurrentPath());
+					smallBrowserFileAdapter.setFiles(fm.getFiles());
+					btnSmallBrowserGoParent.setEnabled(smallBrowserFileManager.canGoParent());
+				}
+				break;
 		}
 	}
 
@@ -249,7 +236,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	 * 
 	 */
 	protected void onWideBrowserGoParentButtonClick() {
-		wideBrowserFileManager.goParent();
+		wideBrowserFileManager.changeToParentDirectory();
 	}
 
 	/**
@@ -270,7 +257,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 
 		FileEntry file = (FileEntry) wideBrowserFileAdapter.getItem(position);
 		if (file.isFolder()) {
-			wideBrowserFileManager.cwd(file.getName());
+			wideBrowserFileManager.changeWorkingDirectory(file.getName());
 		}
 	}
 
@@ -278,7 +265,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	 * 
 	 */
 	protected void onSmallBrowserGoParentButtonClick() {
-		smallBrowserFileManager.goParent();
+		smallBrowserFileManager.changeToParentDirectory();
 	}
 
 	/**
@@ -291,7 +278,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 
 		FileEntry file = (FileEntry) smallBrowserFileAdapter.getItem(position);
 		if (file.isFolder()) {
-			smallBrowserFileManager.cwd(file.getName());
+			smallBrowserFileManager.changeWorkingDirectory(file.getName());
 		}
 	}
 }

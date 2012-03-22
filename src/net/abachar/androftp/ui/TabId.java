@@ -12,10 +12,10 @@ import android.app.Fragment;
  * @author abachar
  */
 public enum TabId {
+	CONSOLE(ConsoleFragment.class, R.string.main_tab_console),
 	LOCAL_MANAGER(LocalManagerFragment.class, R.string.main_tab_local), 
 	SERVER_MANAGER(ServerManagerFragment.class, R.string.main_tab_server), 
-	TRANSFER_MANAGER(TransferFragment.class, R.string.main_tab_transfers), 
-	CONSOLE(ConsoleFragment.class, R.string.main_tab_console);
+	TRANSFER_MANAGER(TransferFragment.class, R.string.main_tab_transfers);
 
 	/**
 	 * 

@@ -3,8 +3,9 @@ package net.abachar.androftp.ui;
 import net.abachar.androftp.R;
 import net.abachar.androftp.filelist.FTPFileManager;
 import net.abachar.androftp.filelist.FileManager;
+import net.abachar.androftp.filelist.FileManagerListener;
+import net.abachar.androftp.filelist.FileManagerMessage;
 import net.abachar.androftp.filelist.LocalFileManager;
-import net.abachar.androftp.filelist.OrderBy;
 import net.abachar.androftp.servers.Logontype;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
@@ -13,13 +14,12 @@ import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.os.Bundle;
-import android.os.Environment;
 
 /**
  * 
  * @author abachar
  */
-public class MainActivity extends Activity implements ActionBar.TabListener {
+public class MainActivity extends Activity implements ActionBar.TabListener, FileManagerListener {
 
 	/** Tab indexs and selected tab index */
 	private TabId selectedTab;
@@ -28,6 +28,9 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 	private FileManager localFileManager;
 	private FileManager serverFileManager;
 
+	/** Connexion progress dialog */
+	private ProgressDialog connectProgress;
+
 	/**
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
 	 */
@@ -35,20 +38,15 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		// Use main view
-		setContentView(R.layout.main);
-		
+		// Show waiting dialog
+		connectProgress = ProgressDialog.show(this, getString(R.string.connect_progress_title), getString(R.string.connect_progress_message), true, false);
+
 		// Create map properties
 		final Bundle bundle = new Bundle();
 		if (savedInstanceState != null) {
-			
+
 		} else {
 
-			// Setup local root directory
-			String path = Environment.getExternalStorageDirectory().getAbsolutePath();
-			bundle.putString("local.rootPath", path);
-			bundle.putString("local.currentPath", path);
-			
 			// Server data
 			Bundle intentExtras = getIntent().getExtras();
 			bundle.putString("server.host", intentExtras.getString("host"));
@@ -60,41 +58,38 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 				bundle.putString("server.password", intentExtras.getString("password"));
 			}
 
-			// Setup local and server order
-			bundle.putSerializable("local.orderBy", OrderBy.NAME);
-			bundle.putSerializable("server.orderBy", OrderBy.NAME);
-
 			// Setup selected tab
 			selectedTab = TabId.LOCAL_MANAGER;
 		}
 
-		// File managers
+		// Instanciate managers
 		localFileManager = new LocalFileManager();
 		serverFileManager = new FTPFileManager();
+		
+		// Listener
+		localFileManager.addFileManagerListener(this);
+		serverFileManager.addFileManagerListener(this);
 
-		final ProgressDialog progressDialog = ProgressDialog.show(this, "Authentification", "Please wait...", true);
-		new Thread(new Runnable() {
-			public void run() {
-				localFileManager.init(bundle);
-				serverFileManager.init(bundle);
-				
-				runOnUiThread(new Runnable() {
-					public void run() {
-						progressDialog.dismiss();
-					}
-				});
-			}
-		}).start();
+		// Init file managers
+		localFileManager.init(bundle);
+		serverFileManager.init(bundle);
+
+		// Use main view
+		setContentView(R.layout.main);
 
 		// Setup actionbar
 		setupActionBar();
+
+		// Connect file managers
+		localFileManager.connect();
+		serverFileManager.connect();
 	}
-	
+
 	/**
 	 * 
 	 */
 	private void setupActionBar() {
-		
+
 		ActionBar actionBar = getActionBar();
 		// actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM |
 		// ActionBar.DISPLAY_USE_LOGO);
@@ -103,31 +98,17 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 		actionBar.setDisplayShowTitleEnabled(false);
 
 		// Create local tab
-		createTab(TabId.LOCAL_MANAGER);
-		createTab(TabId.SERVER_MANAGER);
-		createTab(TabId.TRANSFER_MANAGER);
-		createTab(TabId.CONSOLE);
+		for (TabId tabId : TabId.values()) {
+			ActionBar.Tab tab = actionBar.newTab();
+			tab.setText(getString(tabId.getTextId()));
+			tab.setTag(new TabTag(tabId));
+			tab.setTabListener(this);
+
+			actionBar.addTab(tab);
+		}
 
 		// Set selected tab
 		actionBar.setSelectedNavigationItem(selectedTab.ordinal());
-	}
-
-	/**
-	 * 
-	 * @param index
-	 * @param className
-	 * @param textId
-	 */
-	private void createTab(TabId tabId) {
-
-		ActionBar actionBar = getActionBar();
-		ActionBar.Tab tab = actionBar.newTab();
-
-		tab.setText(getString(tabId.getTextId()));
-		tab.setTag(new TabTag(tabId));
-		tab.setTabListener(this);
-
-		actionBar.addTab(tab);
 	}
 
 	/**
@@ -168,6 +149,28 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 	}
 
 	/**
+	 * @see net.abachar.androftp.filelist.FileManagerListener#onUpdateListFiles(net.abachar.androftp.filelist.FileManager,
+	 *      net.abachar.androftp.filelist.FileManagerMessage)
+	 */
+	@Override
+	public void onUpdateListFiles(FileManager fm, FileManagerMessage msg) {
+
+		switch (msg) {
+			case BEGIN_CONNECT:
+				if (!connectProgress.isShowing()) {
+					connectProgress.show();
+				}
+				break;
+
+			case END_CONNECT:
+				if (localFileManager.isConnected() && serverFileManager.isConnected()) {
+					connectProgress.dismiss();
+				}
+				break;
+		}
+	}
+
+	/**
 	 * @return the localFileManager
 	 */
 	public FileManager getLocalFileManager() {
@@ -185,12 +188,10 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
 	 * Tab tag
 	 */
 	private class TabTag {
-		// int index;
 		String key;
 		String className;
 
 		TabTag(TabId tabId) {
-			// this.index = index;
 			this.key = "andro-ftp-tab-index-" + tabId.ordinal();
 			this.className = tabId.getClazz().getName();
 		}

@@ -14,21 +14,31 @@ public interface FileManager {
 	 * Initialize file manager
 	 */
 	public void init(Bundle bundle);
+	
+	/**
+	 * 
+	 */
+	public void connect();
 
 	/**
-	 * Install listner
+	 * 
+	 */
+	public boolean isConnected();
+	
+	/**
+	 * Install listener
 	 */
 	public void addFileManagerListener(FileManagerListener listener);
 
 	/**
 	 * Go to parent directory
 	 */
-	public void goParent();
+	public void changeToParentDirectory();
 
 	/**
 	 * Change working directory
 	 */
-	public void cwd(String name);
+	public void changeWorkingDirectory(String dirname);
 
 	/**
 	 * Change files order by
@@ -38,15 +48,15 @@ public interface FileManager {
 	/**
 	 * @return true if can go parent directory
 	 */
-	public boolean isGoParentEnabled();
-
-	/**
-	 * @return files list
-	 */
-	public List<FileEntry> getFiles();
+	public boolean canGoParent();
 
 	/**
 	 * @return the current path
 	 */
 	public String getCurrentPath();
+
+	/**
+	 * @return files list
+	 */
+	public List<FileEntry> getFiles();
 }

@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 
 import net.abachar.androftp.servers.Logontype;
 
@@ -43,7 +43,6 @@ public class FTPFileManager extends AbstractFileManager {
 	 */
 	@Override
 	public void init(Bundle bundle) {
-		super.init(bundle);
 
 		// Initial order
 		if (bundle.containsKey("server.orderBy")) {
@@ -61,6 +60,22 @@ public class FTPFileManager extends AbstractFileManager {
 			username = null;
 			password = null;
 		}
+		
+		// Not connected
+		rootPath = currentPath = "";
+		inRootFolder = true;
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.FileManager#doConnect()
+	 */
+	protected boolean doConnect() {
+
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 
 		// Connect
 		try {
@@ -71,78 +86,84 @@ public class FTPFileManager extends AbstractFileManager {
 			int reply = ftpClient.getReplyCode();
 			if (!FTPReply.isPositiveCompletion(reply)) {
 				ftpClient.disconnect();
-			}
+			} else {
 
-			if (logontype == Logontype.NORMAL) {
-				if (!ftpClient.login(username, password)) {
-					ftpClient.logout();
+				if (logontype == Logontype.NORMAL) {
+					if (!ftpClient.login(username, password)) {
+						ftpClient.logout();
+					}
 				}
-			}
 
-			ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
-			ftpClient.enterLocalPassiveMode();
+				ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+				ftpClient.enterLocalPassiveMode();
+
+				rootPath = currentPath = ftpClient.printWorkingDirectory();
+
+				// Load files
+				loadFiles();
+				notifyListeners(FileManagerMessage.INITIAL_LIST_FILES);
+				return true;
+			}
 
 		} catch (SocketException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			
 		}
 
-		// Update list files
-		try {
-			rootPath = currentPath = ftpClient.printWorkingDirectory();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		updateListFiles(true);
+		return false;
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.FileManager#goParent()
+	 * @see net.abachar.androftp.filelist.FileManager#doChangeToParentDirectory()
 	 */
 	@Override
-	public void goParent() {
+	protected void doChangeToParentDirectory() {
 
 		// refresh list files
 		try {
-			currentPath = paths.pop();
-			ftpClient.changeToParentDirectory();
+			if (ftpClient.changeToParentDirectory()) {
+				currentPath = ftpClient.printWorkingDirectory();
+
+				// refresh list files
+				inRootFolder = rootPath.equals(currentPath);
+				loadFiles();
+			}
 		} catch (IOException e) {
 		}
-		updateListFiles(true);
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.FileManager#cwd(java.lang.String)
+	 * @see net.abachar.androftp.filelist.FileManager#doChangeWorkingDirectory(java.util.String)
 	 */
 	@Override
-	public void cwd(String name) {
+	protected void doChangeWorkingDirectory(String dirname) {
 
-		// Push current path in stack
-		paths.push(currentPath);
-
-		// refresh list files
-		currentPath = currentPath + File.separator + name;
+		// Change working directory
 		try {
-			ftpClient.changeWorkingDirectory(currentPath);
+			if (ftpClient.changeWorkingDirectory(currentPath + File.separator + dirname)) {
+				currentPath = ftpClient.printWorkingDirectory();
+
+				// refresh list files
+				inRootFolder = rootPath.equals(currentPath);
+				loadFiles();
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		updateListFiles(true);
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.FileManager#loadFiles()
+	 * 
 	 */
-	@Override
-	protected List<FileEntry> loadFiles() {
+	private void loadFiles() {
+		files = null;
 
-		List<FileEntry> files = null;
-
-		// Load local files
+		// Load server files
 		try {
-			FTPFile[] list = ftpClient.listFiles(currentPath);
+			FTPFile[] list = ftpClient.listFiles();
 
 			// Scan all files
 			if ((list != null) && (list.length > 0)) {
@@ -157,11 +178,12 @@ public class FTPFileManager extends AbstractFileManager {
 
 					files.add(df);
 				}
+
+				// Sort
+				Collections.sort(files, orderByComparator);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-		return files;
 	}
 }

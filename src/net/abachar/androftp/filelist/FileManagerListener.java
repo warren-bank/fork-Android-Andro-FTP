@@ -9,10 +9,5 @@ public interface FileManagerListener {
 	/**
 	 * 
 	 */
-	public void onBeginUpdateListFiles(FileManager fm);
-
-	/**
-	 * 
-	 */
-	public void onEndUpdateListFiles(FileManager fm);
+	public void onUpdateListFiles(FileManager fm, FileManagerMessage msg);
 }

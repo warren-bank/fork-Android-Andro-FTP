@@ -1,12 +1,10 @@
 package net.abachar.androftp.filelist;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Stack;
+import java.util.Set;
 
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 
@@ -17,7 +15,22 @@ import android.os.Message;
 public abstract class AbstractFileManager implements FileManager {
 
 	/**
+	 * Update list files listeners
+	 */
+	protected Set<FileManagerListener> listeners;
+
+	/**
+	 * 
+	 */
+	protected boolean connected;
+
+	/**
 	 * Root path
+	 */
+	protected boolean inRootFolder;
+
+	/**
+	 * Current path
 	 */
 	protected String rootPath;
 
@@ -25,11 +38,6 @@ public abstract class AbstractFileManager implements FileManager {
 	 * Current path
 	 */
 	protected String currentPath;
-
-	/**
-	 * 
-	 */
-	protected List<FileManagerListener> listeners;
 
 	/**
 	 * Order
@@ -42,87 +50,96 @@ public abstract class AbstractFileManager implements FileManager {
 	protected List<FileEntry> files;
 
 	/**
-	 * Stack paths
-	 */
-	protected Stack<String> paths;
-
-	/**
 	 * Default constructor
 	 */
 	public AbstractFileManager() {
-		// Paths
-		paths = new Stack<String>();
-		
-		// Listners
-		listeners = new ArrayList<FileManagerListener>();
-		
-		// Default order by
+		listeners = new HashSet<FileManagerListener>();
+		connected = false;
+		inRootFolder = true;
+		currentPath = null;
 		orderByComparator = new OrderByComparator(OrderBy.NAME);
-		
-		// No files
 		files = null;
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.FileManager#init(android.os.Bundle)
+	 * @see net.abachar.androftp.filelist.FileManager#connect()
 	 */
 	@Override
-	public void init(Bundle bundle) {
-	}
+	public void connect() {
 
-	/**
-	 * 
-	 */
-	public abstract void goParent();
-
-	/**
-	 * 
-	 */
-	public abstract void cwd(String name);
-
-	/**
-	 *
-	 */
-	protected void updateListFiles(final boolean reload) {
-		final FileManager fm = this;
-
-		// Load list files in separate thread
-		new Thread(new Runnable() {
-			public void run() {
-
-				// Notify listner
-				if (!listeners.isEmpty()) {
-					Message msg = handler.obtainMessage();
-					msg.what = MSG_BEGIN_UPDATE_LIST_FILES;
-					msg.obj = fm;
-					handler.sendMessage(msg);
-				}
-
-				// List all files
-				if (reload) {
-					files = loadFiles();
-				}
-
-				// Order
-				if ((files != null) && !files.isEmpty()) {
-					Collections.sort(files, orderByComparator);
-				}
-
-				// Notify listner
-				if (!listeners.isEmpty()) {
-					Message msg = handler.obtainMessage();
-					msg.what = MSG_END_UPDATE_LIST_FILES;
-					msg.obj = fm;
-					handler.sendMessage(msg);
-				}
+		/** Excute a command asynchronously */
+		execAsyncCommand(FileManagerMessage.BEGIN_CONNECT, FileManagerMessage.END_CONNECT, new AsyncCommand() {
+			public void execute() {
+				connected = doConnect();
 			}
-		}).start();
+		});
 	}
 
 	/**
 	 * 
 	 */
-	protected abstract List<FileEntry> loadFiles();
+	protected abstract boolean doConnect();
+
+	/**
+	 * @see net.abachar.androftp.filelist.FileManager#isConnected()
+	 */
+	@Override
+	public boolean isConnected() {
+		return connected;
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.FileManager#changeToParentDirectory()
+	 */
+	@Override
+	public void changeToParentDirectory() {
+
+		// Can we go to parent folder 
+		if (!inRootFolder) {
+			/** Excute a command asynchronously */
+			execAsyncCommand(FileManagerMessage.BEGIN_UPDATE_LIST_FILES, FileManagerMessage.END_UPDATE_LIST_FILES, new AsyncCommand() {
+				public void execute() {
+					doChangeToParentDirectory();
+				}
+			});
+		}
+	}
+	
+	/**
+	 * 
+	 */
+	protected abstract void doChangeToParentDirectory();
+
+	/**
+	 * @see net.abachar.androftp.filelist.FileManager#changeWorkingDirectory(java.util.String)
+	 */
+	@Override
+	public void changeWorkingDirectory(final String dirname) {
+
+		/** Excute a command asynchronously */
+		execAsyncCommand(FileManagerMessage.BEGIN_UPDATE_LIST_FILES, FileManagerMessage.END_UPDATE_LIST_FILES, new AsyncCommand() {
+			public void execute() {
+				doChangeWorkingDirectory(dirname);
+			}
+		});
+	}
+	
+	/**
+	 * 
+	 */
+	protected abstract void doChangeWorkingDirectory(String dirname);
+	
+	/**
+	 * 
+	 */
+	public void addFileManagerListener(FileManagerListener listener) {
+		if (!listeners.contains(listener)) {
+			listeners.add(listener);
+
+			// Notify new added listner
+			listener.onUpdateListFiles(this, FileManagerMessage.INITIAL_LIST_FILES);
+		}
+	}
 
 	/**
 	 * 
@@ -132,130 +149,101 @@ public abstract class AbstractFileManager implements FileManager {
 		// Update order by
 		orderByComparator.orderBy = orderBy;
 
-		// refresh list files with same path
-		updateListFiles(false);
-	}
-
-	/**
-	 * 
-	 */
-	public void addFileManagerListener(FileManagerListener listener) {
-		if (!listeners.contains(listener)) {
-			listeners.add(listener);
-
-			// Notify new added listner
-			listener.onEndUpdateListFiles(this);
+		// Re-order files if needed
+		if ((files != null) && !files.isEmpty()) {
+			/** Excute a command asynchronously */
+			execAsyncCommand(FileManagerMessage.BEGIN_UPDATE_LIST_FILES, FileManagerMessage.END_UPDATE_LIST_FILES, new AsyncCommand() {
+				public void execute() {
+					Collections.sort(files, orderByComparator);
+				}
+			});
 		}
 	}
 
 	/**
-	 * 
-	 * @return
+	 * @see net.abachar.androftp.filelist.FileManager#canGoParent()
 	 */
-	public boolean isGoParentEnabled() {
-		return !paths.empty();
+	@Override
+	public boolean canGoParent() {
+		return !inRootFolder;
 	}
 
 	/**
-	 * @return the files
+	 * @see net.abachar.androftp.filelist.FileManager#getCurrentPath()
 	 */
-	public List<FileEntry> getFiles() {
-		return files;
-	}
-	
-	/**
-	 * @return the currentPath
-	 */
+	@Override
 	public String getCurrentPath() {
 		return currentPath;
 	}
 
-	public static final int MSG_BEGIN_UPDATE_LIST_FILES = 0;
-	public static final int MSG_END_UPDATE_LIST_FILES = 1;
-	
+	/**
+	 * @see net.abachar.androftp.filelist.FileManager#getFiles()
+	 */
+	@Override
+	public List<FileEntry> getFiles() {
+		return files;
+	}
+
+	/**
+	 * 
+	 */
+	protected interface AsyncCommand {
+
+		/**
+		 * 
+		 */
+		public void execute();
+	}
+
+	/**
+	 * 
+	 * @param beginMsg
+	 * @param endMsg
+	 * @param asyncCommand
+	 */
+	protected void execAsyncCommand(final FileManagerMessage beginMsg, final FileManagerMessage endMsg, final AsyncCommand asyncCommand) {
+
+		// Load list files in separate thread
+		new Thread(new Runnable() {
+			public void run() {
+
+				// Send begin message
+				if (beginMsg != null) {
+					notifyListeners(beginMsg);
+				}
+
+				// Execute the command
+				asyncCommand.execute();
+
+				// Send end message
+				if (endMsg != null) {
+					notifyListeners(endMsg);
+				}
+			}
+		}).start();
+	}
+
+	/**
+	 * 
+	 * @param fmm
+	 */
+	protected void notifyListeners(FileManagerMessage fileManagerMessage) {
+		if (!listeners.isEmpty()) {
+			Message msg = handler.obtainMessage();
+			msg.what = fileManagerMessage.ordinal();
+			msg.obj = this;
+			handler.sendMessage(msg);
+		}
+	}
+
 	/**
 	 * 
 	 */
 	final Handler handler = new Handler() {
 		public void handleMessage(Message msg) {
-			switch (msg.what) {
-				case MSG_BEGIN_UPDATE_LIST_FILES:
-					for (FileManagerListener listener : listeners) {
-						listener.onBeginUpdateListFiles((FileManager) msg.obj);
-					}
-					break;
-					
-				case MSG_END_UPDATE_LIST_FILES:
-					for (FileManagerListener listener : listeners) {
-						listener.onEndUpdateListFiles((FileManager) msg.obj);
-					}
-					break;
-					
-				default:
-					break;
+			for (FileManagerListener listener : listeners) {
+				listener.onUpdateListFiles((FileManager) msg.obj, FileManagerMessage.values()[msg.what]);
 			}
 		}
 	};
-
-	/**
-	 * 
-	 */
-	protected static class OrderByComparator implements Comparator<FileEntry> {
-
-		/** */
-		protected OrderBy orderBy;
-
-		/**
-		 * 
-		 */
-		public OrderByComparator(OrderBy orderBy) {
-			this.orderBy = orderBy;
-		}
-
-		/**
-		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-		 */
-		@Override
-		public int compare(FileEntry lhs, FileEntry rhs) {
-
-			// Folder before files
-			if (lhs.isFolder() && !rhs.isFolder()) {
-				return -1;
-			}
-			if (!lhs.isFolder() && rhs.isFolder()) {
-				return 1;
-			}
-
-			// Order by type
-			if (orderBy == OrderBy.TYPE) {
-				int ret = lhs.getType().compareTo(rhs.getType());
-				if (ret != 0) {
-					return ret;
-				}
-			}
-
-			// Order by time
-			if (orderBy == OrderBy.TIME) {
-				if (lhs.getLastModified() < rhs.getLastModified()) {
-					return -1;
-				}
-				if (lhs.getLastModified() > rhs.getLastModified()) {
-					return 1;
-				}
-			}
-
-			// Order by size
-			if (orderBy == OrderBy.SIZE) {
-				if (lhs.getSize() < rhs.getSize()) {
-					return -1;
-				}
-				if (lhs.getSize() > rhs.getSize()) {
-					return 1;
-				}
-			}
-
-			// orderBy == ORDER_BY_NAME
-			return lhs.getName().compareToIgnoreCase(rhs.getName());
-		}
-	}
 }
