@@ -11,6 +11,7 @@ import net.abachar.androftp.servers.Logontype;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
+import org.apache.commons.net.ftp.FTPFileFilter;
 import org.apache.commons.net.ftp.FTPReply;
 
 import android.os.Bundle;
@@ -163,7 +164,18 @@ public class FTPFileManager extends AbstractFileManager {
 
 		// Load server files
 		try {
-			FTPFile[] list = ftpClient.listFiles();
+			FTPFile[] list = ftpClient.listFiles(currentPath, new FTPFileFilter() {
+				@Override
+				public boolean accept(FTPFile file) {
+					String fileName = file.getName();
+
+					if (file.isDirectory()) {
+						return !".".equals(fileName) && !"..".equals(fileName);
+					}
+
+					return !file.isSymbolicLink();
+				}
+			});
 
 			// Scan all files
 			if ((list != null) && (list.length > 0)) {

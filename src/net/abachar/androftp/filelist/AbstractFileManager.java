@@ -1,8 +1,10 @@
 package net.abachar.androftp.filelist;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import android.os.Handler;
@@ -17,7 +19,7 @@ public abstract class AbstractFileManager implements FileManager {
 	/**
 	 * Update list files listeners
 	 */
-	protected Set<FileManagerListener> listeners;
+	protected Map<FileManagerMessage, Set<FileManagerListener>> listeners;
 
 	/**
 	 * 
@@ -53,7 +55,7 @@ public abstract class AbstractFileManager implements FileManager {
 	 * Default constructor
 	 */
 	public AbstractFileManager() {
-		listeners = new HashSet<FileManagerListener>();
+		listeners = new HashMap<FileManagerMessage, Set<FileManagerListener>>();
 		connected = false;
 		inRootFolder = true;
 		currentPath = null;
@@ -132,12 +134,23 @@ public abstract class AbstractFileManager implements FileManager {
 	/**
 	 * 
 	 */
-	public void addFileManagerListener(FileManagerListener listener) {
-		if (!listeners.contains(listener)) {
-			listeners.add(listener);
+	public void addFileManagerListener(FileManagerListener listener, FileManagerMessage... messages) {
 
-			// Notify new added listner
-			listener.onUpdateListFiles(this, FileManagerMessage.INITIAL_LIST_FILES);
+		for (FileManagerMessage message : messages) {
+			
+			if (!listeners.containsKey(message)) {
+				listeners.put(message, new HashSet<FileManagerListener>());
+			}
+
+			Set<FileManagerListener> l = listeners.get(message);;
+			if (!l.contains(listener)) {
+				l.add(listener);
+
+				// Notify new added listner
+				if (message.equals(FileManagerMessage.INITIAL_LIST_FILES)) {
+					listener.onUpdateListFiles(this, FileManagerMessage.INITIAL_LIST_FILES);
+				}
+			}
 		}
 	}
 
@@ -241,8 +254,13 @@ public abstract class AbstractFileManager implements FileManager {
 	 */
 	final Handler handler = new Handler() {
 		public void handleMessage(Message msg) {
-			for (FileManagerListener listener : listeners) {
-				listener.onUpdateListFiles((FileManager) msg.obj, FileManagerMessage.values()[msg.what]);
+			FileManagerMessage fmm = FileManagerMessage.values()[msg.what];
+			
+			if (listeners.containsKey(fmm)) {
+				Set<FileManagerListener> l = listeners.get(fmm);
+				for (FileManagerListener listener : l) {
+					listener.onUpdateListFiles((FileManager) msg.obj, fmm);
+				}
 			}
 		}
 	};

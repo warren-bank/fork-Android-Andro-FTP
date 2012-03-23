@@ -26,9 +26,9 @@ public interface FileManager {
 	public boolean isConnected();
 	
 	/**
-	 * Install listener
+	 * Install listener for messages
 	 */
-	public void addFileManagerListener(FileManagerListener listener);
+	public void addFileManagerListener(FileManagerListener listener, FileManagerMessage... messages);
 
 	/**
 	 * Go to parent directory

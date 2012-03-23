@@ -67,8 +67,8 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 		serverFileManager = new FTPFileManager();
 		
 		// Listener
-		localFileManager.addFileManagerListener(this);
-		serverFileManager.addFileManagerListener(this);
+		localFileManager.addFileManagerListener(this, FileManagerMessage.BEGIN_CONNECT, FileManagerMessage.END_CONNECT);
+		serverFileManager.addFileManagerListener(this, FileManagerMessage.BEGIN_CONNECT, FileManagerMessage.END_CONNECT);
 
 		// Init file managers
 		localFileManager.init(bundle);

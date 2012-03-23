@@ -70,8 +70,8 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 		initSmallBrowserUI(view);
 
 		// Show files
-		wideBrowserFileManager.addFileManagerListener(this);
-		smallBrowserFileManager.addFileManagerListener(this);
+		wideBrowserFileManager.addFileManagerListener(this, FileManagerMessage.INITIAL_LIST_FILES, FileManagerMessage.BEGIN_UPDATE_LIST_FILES, FileManagerMessage.END_UPDATE_LIST_FILES);
+		smallBrowserFileManager.addFileManagerListener(this, FileManagerMessage.INITIAL_LIST_FILES, FileManagerMessage.BEGIN_UPDATE_LIST_FILES, FileManagerMessage.END_UPDATE_LIST_FILES);
 
 		// Return created view
 		return view;
