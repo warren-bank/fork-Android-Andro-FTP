@@ -9,6 +9,7 @@ import java.util.Set;
 
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 
 /**
  * 
@@ -70,24 +71,34 @@ public abstract class AbstractFileManager implements FileManager {
 	public void connect() {
 
 		/** Excute a command asynchronously */
-		execAsyncCommand(FileManagerMessage.BEGIN_CONNECT, FileManagerMessage.END_CONNECT, new AsyncCommand() {
-			public void execute() {
-				connected = doConnect();
+		execAsyncCommand(FileManagerMessage.WILL_CONNECT, FileManagerMessage.DID_CONNECT, new AsyncCommand() {
+			public boolean execute() {
+
+				try {
+					// Connection
+					doConnect();
+					connected = true;
+					
+					// Notify listeners that the file list is ready
+					notifyListeners(FileManagerMessage.INITIAL_LIST_FILES);
+
+					return true;
+//				} catch (ConnectionException ex) {
+//					connected = false;
+//					
+//					// Send error connexion and skip end message
+//					notifyListeners(FileManagerMessage.ERROR_CONNECTION);
+//					return false;
+				} catch (FileManagerException ex) {
+					connected = false;
+					Log.e("AFM", "connect exception", ex);
+
+					// Send error connexion and skip end message
+					notifyListeners(FileManagerMessage.ERROR_CONNECTION);
+					return false;
+				}
 			}
 		});
-	}
-
-	/**
-	 * 
-	 */
-	protected abstract boolean doConnect();
-
-	/**
-	 * @see net.abachar.androftp.filelist.FileManager#isConnected()
-	 */
-	@Override
-	public boolean isConnected() {
-		return connected;
 	}
 
 	/**
@@ -96,21 +107,25 @@ public abstract class AbstractFileManager implements FileManager {
 	@Override
 	public void changeToParentDirectory() {
 
-		// Can we go to parent folder 
+		// Can we go to parent folder
 		if (!inRootFolder) {
 			/** Excute a command asynchronously */
-			execAsyncCommand(FileManagerMessage.BEGIN_UPDATE_LIST_FILES, FileManagerMessage.END_UPDATE_LIST_FILES, new AsyncCommand() {
-				public void execute() {
-					doChangeToParentDirectory();
+			execAsyncCommand(FileManagerMessage.WILL_LOAD_LIST_FILES, FileManagerMessage.DID_LOAD_LIST_FILES, new AsyncCommand() {
+				public boolean execute() {
+
+					try {
+						doChangeToParentDirectory();
+						return true;
+					} catch (FileManagerException ex) {
+						Log.e("AFM", "changeToParentDirectory exception", ex);
+						// Send error connexion and skip end message
+						notifyListeners(FileManagerMessage.LOST_CONNECTION);
+						return false;
+					}
 				}
 			});
 		}
 	}
-	
-	/**
-	 * 
-	 */
-	protected abstract void doChangeToParentDirectory();
 
 	/**
 	 * @see net.abachar.androftp.filelist.FileManager#changeWorkingDirectory(java.util.String)
@@ -119,30 +134,71 @@ public abstract class AbstractFileManager implements FileManager {
 	public void changeWorkingDirectory(final String dirname) {
 
 		/** Excute a command asynchronously */
-		execAsyncCommand(FileManagerMessage.BEGIN_UPDATE_LIST_FILES, FileManagerMessage.END_UPDATE_LIST_FILES, new AsyncCommand() {
-			public void execute() {
-				doChangeWorkingDirectory(dirname);
+		execAsyncCommand(FileManagerMessage.WILL_LOAD_LIST_FILES, FileManagerMessage.DID_LOAD_LIST_FILES, new AsyncCommand() {
+			public boolean execute() {
+
+				try {
+					doChangeWorkingDirectory(dirname);
+					return true;
+				} catch (FileManagerException ex) {
+					Log.e("AFM", "changeWorkingDirectory exception", ex);
+					// Send error connexion and skip end message
+					notifyListeners(FileManagerMessage.LOST_CONNECTION);
+					return false;
+				}
 			}
 		});
 	}
-	
+
 	/**
 	 * 
 	 */
-	protected abstract void doChangeWorkingDirectory(String dirname);
-	
+	public void changeOrderBy(final OrderBy orderBy) {
+
+		// Update order by
+		orderByComparator.orderBy = orderBy;
+
+		// Re-order files if needed
+		if ((files != null) && !files.isEmpty()) {
+
+			/** Excute a command asynchronously */
+			execAsyncCommand(FileManagerMessage.WILL_LOAD_LIST_FILES, FileManagerMessage.DID_LOAD_LIST_FILES, new AsyncCommand() {
+				public boolean execute() {
+					Collections.sort(files, orderByComparator);
+					return true;
+				}
+			});
+		}
+	}
+
+	/**
+	 * 
+	 */
+	protected abstract void doConnect() throws FileManagerException;
+
+	/**
+	 * 
+	 */
+	protected abstract void doChangeToParentDirectory() throws FileManagerException;
+
+	/**
+	 * 
+	 */
+	protected abstract void doChangeWorkingDirectory(String dirname) throws FileManagerException;
+
 	/**
 	 * 
 	 */
 	public void addFileManagerListener(FileManagerListener listener, FileManagerMessage... messages) {
 
 		for (FileManagerMessage message : messages) {
-			
+
 			if (!listeners.containsKey(message)) {
 				listeners.put(message, new HashSet<FileManagerListener>());
 			}
 
-			Set<FileManagerListener> l = listeners.get(message);;
+			Set<FileManagerListener> l = listeners.get(message);
+			;
 			if (!l.contains(listener)) {
 				l.add(listener);
 
@@ -155,22 +211,11 @@ public abstract class AbstractFileManager implements FileManager {
 	}
 
 	/**
-	 * 
+	 * @see net.abachar.androftp.filelist.FileManager#isConnected()
 	 */
-	public void setOrderBy(final OrderBy orderBy) {
-
-		// Update order by
-		orderByComparator.orderBy = orderBy;
-
-		// Re-order files if needed
-		if ((files != null) && !files.isEmpty()) {
-			/** Excute a command asynchronously */
-			execAsyncCommand(FileManagerMessage.BEGIN_UPDATE_LIST_FILES, FileManagerMessage.END_UPDATE_LIST_FILES, new AsyncCommand() {
-				public void execute() {
-					Collections.sort(files, orderByComparator);
-				}
-			});
-		}
+	@Override
+	public boolean isConnected() {
+		return connected;
 	}
 
 	/**
@@ -198,14 +243,14 @@ public abstract class AbstractFileManager implements FileManager {
 	}
 
 	/**
-	 * 
+	 * Asynchronous command callback
 	 */
-	protected interface AsyncCommand {
+	protected static interface AsyncCommand {
 
 		/**
-		 * 
+		 * @return true if command executed successfully
 		 */
-		public void execute();
+		public boolean execute();
 	}
 
 	/**
@@ -226,11 +271,12 @@ public abstract class AbstractFileManager implements FileManager {
 				}
 
 				// Execute the command
-				asyncCommand.execute();
+				if (asyncCommand.execute()) {
 
-				// Send end message
-				if (endMsg != null) {
-					notifyListeners(endMsg);
+					// Send end message
+					if (endMsg != null) {
+						notifyListeners(endMsg);
+					}
 				}
 			}
 		}).start();
@@ -255,7 +301,7 @@ public abstract class AbstractFileManager implements FileManager {
 	final Handler handler = new Handler() {
 		public void handleMessage(Message msg) {
 			FileManagerMessage fmm = FileManagerMessage.values()[msg.what];
-			
+
 			if (listeners.containsKey(fmm)) {
 				Set<FileManagerListener> l = listeners.get(fmm);
 				for (FileManagerListener listener : l) {

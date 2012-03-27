@@ -43,7 +43,7 @@ public interface FileManager {
 	/**
 	 * Change files order by
 	 */
-	public void setOrderBy(final OrderBy orderBy);
+	public void changeOrderBy(final OrderBy orderBy);
 
 	/**
 	 * @return true if can go parent directory

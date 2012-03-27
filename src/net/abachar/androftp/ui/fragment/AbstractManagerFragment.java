@@ -22,6 +22,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -43,6 +44,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	 */
 	protected CheckBox chkWideBrowserSelectAll;
 	protected ImageButton btnWideBrowserGoParent;
+	protected LinearLayout lytWideBrowserLoadingProgress;
 	protected TextView txtWideBrowserCWD;
 	protected Spinner spnWideBrowserOrderBy;
 	protected ListView lsvWideBrowserListFiles;
@@ -52,6 +54,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	 * Small browser
 	 */
 	protected ImageButton btnSmallBrowserGoParent;
+	protected LinearLayout lytSmallBrowserLoadingProgress;
 	protected TextView txtSmallBrowserCWD;
 	protected ListView lsvSmallBrowserListFiles;
 	protected SmallFileAdapter smallBrowserFileAdapter;
@@ -70,8 +73,8 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 		initSmallBrowserUI(view);
 
 		// Show files
-		wideBrowserFileManager.addFileManagerListener(this, FileManagerMessage.INITIAL_LIST_FILES, FileManagerMessage.BEGIN_UPDATE_LIST_FILES, FileManagerMessage.END_UPDATE_LIST_FILES);
-		smallBrowserFileManager.addFileManagerListener(this, FileManagerMessage.INITIAL_LIST_FILES, FileManagerMessage.BEGIN_UPDATE_LIST_FILES, FileManagerMessage.END_UPDATE_LIST_FILES);
+		wideBrowserFileManager.addFileManagerListener(this, FileManagerMessage.INITIAL_LIST_FILES, FileManagerMessage.WILL_LOAD_LIST_FILES, FileManagerMessage.DID_LOAD_LIST_FILES);
+		smallBrowserFileManager.addFileManagerListener(this, FileManagerMessage.INITIAL_LIST_FILES, FileManagerMessage.WILL_LOAD_LIST_FILES, FileManagerMessage.DID_LOAD_LIST_FILES);
 
 		// Return created view
 		return view;
@@ -90,6 +93,10 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 		btnWideBrowserGoParent = (ImageButton) view.findViewById(R.id.wide_browser_go_parent);
 		btnWideBrowserGoParent.setOnClickListener(this);
 		btnWideBrowserGoParent.setEnabled(wideBrowserFileManager.canGoParent());
+		
+		// Loading progress bar
+		lytWideBrowserLoadingProgress = (LinearLayout) view.findViewById(R.id.wide_browser_loading_progress);
+		lytWideBrowserLoadingProgress.setVisibility(View.GONE);
 
 		// Setup wide explorer current working directory text
 		txtWideBrowserCWD = (TextView) view.findViewById(R.id.wide_browser_cwd);
@@ -122,6 +129,10 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 
 		// Setup wide explorer current working directory text
 		txtSmallBrowserCWD = (TextView) view.findViewById(R.id.small_browser_cwd);
+
+		// Loading progress bar
+		lytSmallBrowserLoadingProgress = (LinearLayout) view.findViewById(R.id.small_browser_loading_progress);
+		lytSmallBrowserLoadingProgress.setVisibility(View.GONE);
 
 		// Setup wide explorer file list
 		lsvSmallBrowserListFiles = (ListView) view.findViewById(R.id.small_browser_files);
@@ -195,29 +206,35 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	public void onUpdateListFiles(FileManager fm, FileManagerMessage msg) {
 
 		switch (msg) {
-			case BEGIN_UPDATE_LIST_FILES:
+			case WILL_LOAD_LIST_FILES:
 				if (fm == wideBrowserFileManager) {
 					txtWideBrowserCWD.setText(getString(R.string.loading));
 					wideBrowserFileAdapter.setFiles(null);
-					btnWideBrowserGoParent.setEnabled(false);
+					btnWideBrowserGoParent.setVisibility(View.GONE);
+					lytWideBrowserLoadingProgress.setVisibility(View.VISIBLE);
 					chkWideBrowserSelectAll.setEnabled(false);
 				} else if (fm == smallBrowserFileManager) {
 					txtSmallBrowserCWD.setText(getString(R.string.loading));
 					smallBrowserFileAdapter.setFiles(null);
-					btnSmallBrowserGoParent.setEnabled(false);
+					btnSmallBrowserGoParent.setVisibility(View.GONE);
+					lytSmallBrowserLoadingProgress.setVisibility(View.VISIBLE);
 				}
 				break;
 
 			case INITIAL_LIST_FILES:
-			case END_UPDATE_LIST_FILES:
+			case DID_LOAD_LIST_FILES:
 				if (fm == wideBrowserFileManager) {
 					txtWideBrowserCWD.setText(fm.getCurrentPath());
 					wideBrowserFileAdapter.setFiles(fm.getFiles());
+					lytWideBrowserLoadingProgress.setVisibility(View.GONE);
+					btnWideBrowserGoParent.setVisibility(View.VISIBLE);
 					btnWideBrowserGoParent.setEnabled(wideBrowserFileManager.canGoParent());
 					chkWideBrowserSelectAll.setEnabled((fm.getFiles() != null) && !fm.getFiles().isEmpty());
 				} else if (fm == smallBrowserFileManager) {
 					txtSmallBrowserCWD.setText(fm.getCurrentPath());
 					smallBrowserFileAdapter.setFiles(fm.getFiles());
+					lytSmallBrowserLoadingProgress.setVisibility(View.GONE);
+					btnSmallBrowserGoParent.setVisibility(View.VISIBLE);
 					btnSmallBrowserGoParent.setEnabled(smallBrowserFileManager.canGoParent());
 				}
 				break;
@@ -244,7 +261,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	 * @param orderBy
 	 */
 	protected void onWideBrowserOrderByChange(OrderBy orderBy) {
-		wideBrowserFileManager.setOrderBy(orderBy);
+		wideBrowserFileManager.changeOrderBy(orderBy);
 	}
 
 	/**

@@ -51,27 +51,21 @@ public class LocalFileManager extends AbstractFileManager {
 	/**
 	 * @see net.abachar.androftp.filelist.FileManager#doConnect()
 	 */
-	protected boolean doConnect() {
+	protected void doConnect() throws FileManagerException {
 
 		// Can read curent directory ?
 		File currentDir = new File(currentPath);
 		if (currentDir.canRead() && currentDir.isDirectory()) {
 			// Load files
 			loadFiles();
-			notifyListeners(FileManagerMessage.INITIAL_LIST_FILES);
-
-			// Ok
-			return true;
 		}
-
-		return false;
 	}
 
 	/**
 	 * @see net.abachar.androftp.filelist.FileManager#doChangeToParentDirectory()
 	 */
 	@Override
-	protected void doChangeToParentDirectory() {
+	protected void doChangeToParentDirectory() throws FileManagerException {
 
 		// Open current directory
 		File currentDir = new File(currentPath);
@@ -88,7 +82,7 @@ public class LocalFileManager extends AbstractFileManager {
 	 * @see net.abachar.androftp.filelist.FileManager#doChangeWorkingDirectory(java.util.String)
 	 */
 	@Override
-	protected void doChangeWorkingDirectory(String dirname) {
+	protected void doChangeWorkingDirectory(String dirname) throws FileManagerException {
 
 		// Change working directory
 		File dir = new File(currentPath + File.separator + dirname);
@@ -129,7 +123,7 @@ public class LocalFileManager extends AbstractFileManager {
 
 				files.add(df);
 			}
-			
+
 			// Sort
 			Collections.sort(files, orderByComparator);
 		}

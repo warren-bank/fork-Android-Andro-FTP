@@ -10,6 +10,7 @@ import net.abachar.androftp.servers.Logontype;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
@@ -67,8 +68,9 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 		serverFileManager = new FTPFileManager();
 		
 		// Listener
-		localFileManager.addFileManagerListener(this, FileManagerMessage.BEGIN_CONNECT, FileManagerMessage.END_CONNECT);
-		serverFileManager.addFileManagerListener(this, FileManagerMessage.BEGIN_CONNECT, FileManagerMessage.END_CONNECT);
+		FileManagerMessage[] msgs = {FileManagerMessage.WILL_CONNECT, FileManagerMessage.DID_CONNECT, FileManagerMessage.ERROR_CONNECTION, FileManagerMessage.LOST_CONNECTION};
+		localFileManager.addFileManagerListener(this, msgs);
+		serverFileManager.addFileManagerListener(this, msgs);
 
 		// Init file managers
 		localFileManager.init(bundle);
@@ -156,16 +158,32 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 	public void onUpdateListFiles(FileManager fm, FileManagerMessage msg) {
 
 		switch (msg) {
-			case BEGIN_CONNECT:
+			case WILL_CONNECT:
 				if (!connectProgress.isShowing()) {
 					connectProgress.show();
 				}
 				break;
 
-			case END_CONNECT:
+			case DID_CONNECT:
 				if (localFileManager.isConnected() && serverFileManager.isConnected()) {
 					connectProgress.dismiss();
 				}
+				break;
+
+			case ERROR_CONNECTION:
+				new AlertDialog.Builder(this)
+					.setMessage("Erreur de connexion :(")
+					.setCancelable(true)
+					.setNeutralButton("Close", null)
+					.create().show();
+				break;
+
+			case LOST_CONNECTION:
+				new AlertDialog.Builder(this)
+					.setMessage("Connexion perdu :(")
+					.setCancelable(true)
+					.setNeutralButton("Close", null)
+					.create().show();
 				break;
 		}
 	}

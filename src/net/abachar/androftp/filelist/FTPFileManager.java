@@ -10,6 +10,7 @@ import net.abachar.androftp.servers.Logontype;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPConnectionClosedException;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPFileFilter;
 import org.apache.commons.net.ftp.FTPReply;
@@ -61,7 +62,7 @@ public class FTPFileManager extends AbstractFileManager {
 			username = null;
 			password = null;
 		}
-		
+
 		// Not connected
 		rootPath = currentPath = "";
 		inRootFolder = true;
@@ -70,58 +71,65 @@ public class FTPFileManager extends AbstractFileManager {
 	/**
 	 * @see net.abachar.androftp.filelist.FileManager#doConnect()
 	 */
-	protected boolean doConnect() {
-
-		try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+	protected void doConnect() throws FileManagerException {
 
 		// Connect
 		try {
+			
+			// For test :)
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			// New ftp client
 			ftpClient = new FTPClient();
+			
+			// Connect to server
 			ftpClient.connect(host, port);
 
 			// Check the reply code to verify success.
 			int reply = ftpClient.getReplyCode();
 			if (!FTPReply.isPositiveCompletion(reply)) {
-				ftpClient.disconnect();
-			} else {
-
-				if (logontype == Logontype.NORMAL) {
-					if (!ftpClient.login(username, password)) {
-						ftpClient.logout();
-					}
-				}
-
-				ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
-				ftpClient.enterLocalPassiveMode();
-
-				rootPath = currentPath = ftpClient.printWorkingDirectory();
-
-				// Load files
-				loadFiles();
-				notifyListeners(FileManagerMessage.INITIAL_LIST_FILES);
-				return true;
+				throw new ConnectionException("E0121");
 			}
 
-		} catch (SocketException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			
-		}
+			if (logontype == Logontype.NORMAL) {
+				if (!ftpClient.login(username, password)) {
+					ftpClient.logout();
+					throw new ConnectionException("E0122");
+				}
+			}
 
-		return false;
+			ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+			ftpClient.enterLocalPassiveMode();
+
+			rootPath = currentPath = ftpClient.printWorkingDirectory();
+
+			// Load files
+			loadFiles();
+			notifyListeners(FileManagerMessage.INITIAL_LIST_FILES);
+
+		} catch (SocketException e) {
+			throw new ConnectionException("E0101");
+		} catch (IOException e) {
+			throw new ConnectionException("E0102");
+		} catch (ConnectionException e) {
+			try {
+				ftpClient.disconnect();
+			} catch (IOException e1) {
+			}
+
+			throw e;
+		}
 	}
 
 	/**
 	 * @see net.abachar.androftp.filelist.FileManager#doChangeToParentDirectory()
 	 */
 	@Override
-	protected void doChangeToParentDirectory() {
+	protected void doChangeToParentDirectory() throws FileManagerException {
 
 		// refresh list files
 		try {
@@ -132,7 +140,10 @@ public class FTPFileManager extends AbstractFileManager {
 				inRootFolder = rootPath.equals(currentPath);
 				loadFiles();
 			}
+		} catch (FTPConnectionClosedException e) {
+			throw new ConnectionException("E0151", e);
 		} catch (IOException e) {
+			throw new FileManagerException("E0161", e);
 		}
 	}
 
@@ -140,7 +151,7 @@ public class FTPFileManager extends AbstractFileManager {
 	 * @see net.abachar.androftp.filelist.FileManager#doChangeWorkingDirectory(java.util.String)
 	 */
 	@Override
-	protected void doChangeWorkingDirectory(String dirname) {
+	protected void doChangeWorkingDirectory(String dirname) throws FileManagerException {
 
 		// Change working directory
 		try {
@@ -151,8 +162,10 @@ public class FTPFileManager extends AbstractFileManager {
 				inRootFolder = rootPath.equals(currentPath);
 				loadFiles();
 			}
+		} catch (FTPConnectionClosedException e) {
+			throw new ConnectionException("E0151", e);
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new FileManagerException("E0161", e);
 		}
 	}
 
