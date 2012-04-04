@@ -4,10 +4,10 @@ package net.abachar.androftp;
  * 
  * @author abachar
  */
-public class Application extends android.app.Application {
+public class MainApplication extends android.app.Application {
 
-	/** */
-	private static Application instance;
+	/** Unique instance */
+	private static MainApplication instance;
 
 	/**
 	 * @see android.app.Application#onCreate()
@@ -16,20 +16,13 @@ public class Application extends android.app.Application {
 	public void onCreate() {
 		super.onCreate();
 		instance = this;
-		instance.initializeInstance();
 	}
 
 	/**
 	 * 
 	 * @return
 	 */
-	public static Application getInstance() {
+	public static MainApplication getInstance() {
 		return instance;
-	}
-
-	/**
-	 * 
-	 */
-	protected void initializeInstance() {
 	}
 }

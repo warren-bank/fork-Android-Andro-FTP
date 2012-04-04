@@ -1,4 +1,4 @@
-package net.abachar.androftp.filelist;
+package net.abachar.androftp.filelist.manager;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +15,7 @@ import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPFileFilter;
 import org.apache.commons.net.ftp.FTPReply;
 
+import android.content.Context;
 import android.os.Bundle;
 
 public class FTPFileManager extends AbstractFileManager {
@@ -36,12 +37,12 @@ public class FTPFileManager extends AbstractFileManager {
 	/**
 	 * Default constructor
 	 */
-	public FTPFileManager() {
-		super();
+	public FTPFileManager(Context context) {
+		super(context);
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.FileManager#init(android.os.Bundle)
+	 * @see net.abachar.androftp.filelist.manager.FileManager#init(android.os.Bundle)
 	 */
 	@Override
 	public void init(Bundle bundle) {
@@ -69,13 +70,13 @@ public class FTPFileManager extends AbstractFileManager {
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.FileManager#doConnect()
+	 * @see net.abachar.androftp.filelist.manager.FileManager#doConnect()
 	 */
 	protected void doConnect() throws FileManagerException {
 
 		// Connect
 		try {
-			
+
 			// For test :)
 			try {
 				Thread.sleep(5000);
@@ -85,7 +86,7 @@ public class FTPFileManager extends AbstractFileManager {
 
 			// New ftp client
 			ftpClient = new FTPClient();
-			
+
 			// Connect to server
 			ftpClient.connect(host, port);
 
@@ -109,7 +110,7 @@ public class FTPFileManager extends AbstractFileManager {
 
 			// Load files
 			loadFiles();
-			notifyListeners(FileManagerMessage.INITIAL_LIST_FILES);
+			notifyListeners(FileManagerEvent.INITIAL_LIST_FILES);
 
 		} catch (SocketException e) {
 			throw new ConnectionException("E0101");
@@ -126,7 +127,7 @@ public class FTPFileManager extends AbstractFileManager {
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.FileManager#doChangeToParentDirectory()
+	 * @see net.abachar.androftp.filelist.manager.FileManager#doChangeToParentDirectory()
 	 */
 	@Override
 	protected void doChangeToParentDirectory() throws FileManagerException {
@@ -148,7 +149,7 @@ public class FTPFileManager extends AbstractFileManager {
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.FileManager#doChangeWorkingDirectory(java.util.String)
+	 * @see net.abachar.androftp.filelist.manager.FileManager#doChangeWorkingDirectory(java.util.String)
 	 */
 	@Override
 	protected void doChangeWorkingDirectory(String dirname) throws FileManagerException {
@@ -167,6 +168,24 @@ public class FTPFileManager extends AbstractFileManager {
 		} catch (IOException e) {
 			throw new FileManagerException("E0161", e);
 		}
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doRefresh()
+	 */
+	@Override
+	protected void doRefresh() throws FileManagerException {
+		// TODO Auto-generated method stub
+
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doCreateNewfolder(java.lang.String)
+	 */
+	@Override
+	protected void doCreateNewfolder(String name) throws FileManagerException {
+		// TODO Auto-generated method stub
+
 	}
 
 	/**

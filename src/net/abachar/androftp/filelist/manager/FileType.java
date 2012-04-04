@@ -1,11 +1,11 @@
-package net.abachar.androftp.filelist;
+package net.abachar.androftp.filelist.manager;
 
 import java.io.File;
 import java.util.HashMap;
 
 import org.apache.commons.net.ftp.FTPFile;
 
-import net.abachar.androftp.Application;
+import net.abachar.androftp.MainApplication;
 import net.abachar.androftp.R;
 import android.graphics.drawable.Drawable;
 
@@ -65,7 +65,7 @@ public enum FileType {
 	 */
 	public Drawable getIcon() {
 		if (!icons.containsKey(iconId)) {
-			icons.put(iconId, Application.getInstance().getResources().getDrawable(iconId.intValue()));
+			icons.put(iconId, MainApplication.getInstance().getResources().getDrawable(iconId.intValue()));
 		}
 		return icons.get(iconId);
 	}

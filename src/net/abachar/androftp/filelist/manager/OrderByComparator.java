@@ -1,4 +1,4 @@
-package net.abachar.androftp.filelist;
+package net.abachar.androftp.filelist.manager;
 
 import java.util.Comparator;
 

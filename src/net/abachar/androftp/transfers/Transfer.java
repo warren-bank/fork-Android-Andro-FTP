@@ -19,7 +19,7 @@ public class Transfer {
 	private String destinationPath;
 
 	/** */
-	private String stringFileSize;
+	private String fileSize;
 
 	/** */
 	private int progress;
@@ -28,12 +28,12 @@ public class Transfer {
 	 * Default constructor
 	 */
 	public Transfer() {
-		this.checked = false;
-		this.direction = TransferDirection.UPLOAD;
-		this.sourcePath = "";
-		this.destinationPath = "";
-		this.stringFileSize = "";
-		this.progress = 0;
+		checked = false;
+		direction = TransferDirection.UPLOAD;
+		sourcePath = "";
+		destinationPath = "";
+		fileSize = "";
+		progress = 0;
 	}
 
 	/**
@@ -97,18 +97,18 @@ public class Transfer {
 	}
 
 	/**
-	 * @return the stringFileSize
+	 * @return the fileSize
 	 */
-	public String getStringFileSize() {
-		return stringFileSize;
+	public String getFileSize() {
+		return fileSize;
 	}
 
 	/**
-	 * @param stringFileSize
-	 *            the stringFileSize to set
+	 * @param fileSize
+	 *            the fileSize to set
 	 */
-	public void setStringFileSize(String stringFileSize) {
-		this.stringFileSize = stringFileSize;
+	public void setFileSize(String fileSize) {
+		this.fileSize = fileSize;
 	}
 
 	/**

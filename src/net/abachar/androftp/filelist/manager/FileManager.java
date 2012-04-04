@@ -1,4 +1,4 @@
-package net.abachar.androftp.filelist;
+package net.abachar.androftp.filelist.manager;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ public interface FileManager {
 	 * Initialize file manager
 	 */
 	public void init(Bundle bundle);
-	
+
 	/**
 	 * 
 	 */
@@ -24,11 +24,11 @@ public interface FileManager {
 	 * 
 	 */
 	public boolean isConnected();
-	
+
 	/**
 	 * Install listener for messages
 	 */
-	public void addFileManagerListener(FileManagerListener listener, FileManagerMessage... messages);
+	public void addFileManagerListener(FileManagerListener listener, FileManagerEvent... messages);
 
 	/**
 	 * Go to parent directory
@@ -59,4 +59,15 @@ public interface FileManager {
 	 * @return files list
 	 */
 	public List<FileEntry> getFiles();
+
+	/**
+	 * 
+	 * @param name
+	 */
+	public void createNewfolder(String name);
+
+	/**
+	 * 
+	 */
+	public void refresh();
 }

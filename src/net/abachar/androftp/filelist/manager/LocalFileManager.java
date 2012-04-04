@@ -1,12 +1,16 @@
-package net.abachar.androftp.filelist;
+package net.abachar.androftp.filelist.manager;
 
 import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import net.abachar.androftp.R;
+
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Environment;
+import android.widget.Toast;
 
 /**
  * 
@@ -17,12 +21,12 @@ public class LocalFileManager extends AbstractFileManager {
 	/**
 	 * Default constructor
 	 */
-	public LocalFileManager() {
-		super();
+	public LocalFileManager(Context context) {
+		super(context);
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.FileManager#init(android.os.Bundle)
+	 * @see net.abachar.androftp.filelist.manager.FileManager#init(android.os.Bundle)
 	 */
 	@Override
 	public void init(Bundle bundle) {
@@ -49,7 +53,7 @@ public class LocalFileManager extends AbstractFileManager {
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.FileManager#doConnect()
+	 * @see net.abachar.androftp.filelist.manager.FileManager#doConnect()
 	 */
 	protected void doConnect() throws FileManagerException {
 
@@ -62,7 +66,7 @@ public class LocalFileManager extends AbstractFileManager {
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.FileManager#doChangeToParentDirectory()
+	 * @see net.abachar.androftp.filelist.manager.FileManager#doChangeToParentDirectory()
 	 */
 	@Override
 	protected void doChangeToParentDirectory() throws FileManagerException {
@@ -79,7 +83,7 @@ public class LocalFileManager extends AbstractFileManager {
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.FileManager#doChangeWorkingDirectory(java.util.String)
+	 * @see net.abachar.androftp.filelist.manager.FileManager#doChangeWorkingDirectory(java.util.String)
 	 */
 	@Override
 	protected void doChangeWorkingDirectory(String dirname) throws FileManagerException {
@@ -93,6 +97,35 @@ public class LocalFileManager extends AbstractFileManager {
 			inRootFolder = false;
 			loadFiles();
 		}
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doCreateNewfolder(java.lang.String)
+	 */
+	@Override
+	protected void doCreateNewfolder(String name) throws FileManagerException {
+		String newFolder = currentPath + File.separator + name;
+
+		File folder = new File(newFolder);
+		if (folder.exists()) {
+			Toast.makeText(mContext, R.string.err_folder_already_exists, Toast.LENGTH_SHORT).show();
+		} else {
+			if (folder.mkdir()) {
+				// Refresh file list
+				loadFiles();
+			} else {
+				Toast.makeText(mContext, R.string.err_create_folder, Toast.LENGTH_SHORT).show();
+			}
+		}
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doRefresh()
+	 */
+	@Override
+	protected void doRefresh() throws FileManagerException {
+		// Refresh file list
+		loadFiles();
 	}
 
 	/**

@@ -1,10 +1,10 @@
-package net.abachar.androftp.filelist;
+package net.abachar.androftp.filelist.manager;
 
 /**
  * 
  * @author abachar
  */
-public enum FileManagerMessage {
+public enum FileManagerEvent {
 	
 	/** Connection messages */
 	WILL_CONNECT,
