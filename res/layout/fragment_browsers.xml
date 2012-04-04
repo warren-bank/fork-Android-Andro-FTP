@@ -30,7 +30,7 @@
                 android:layout_width="60dip"
                 android:layout_height="match_parent"
                 android:gravity="center_vertical"
-                android:src="@drawable/ic_action_goparent" />
+                android:src="@drawable/goparent_selector" />
             
             <LinearLayout
                 android:id="@+id/wide_browser_loading_progress"
@@ -83,7 +83,7 @@
                 android:layout_width="60dip"
                 android:layout_height="match_parent"
                 android:gravity="center_vertical"
-                android:src="@drawable/ic_action_goparent" />
+                android:src="@drawable/goparent_selector" />
 
             <LinearLayout
                 android:id="@+id/small_browser_loading_progress"

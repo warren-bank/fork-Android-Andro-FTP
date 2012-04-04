@@ -15,11 +15,8 @@
         <CheckBox
             android:id="@+id/select_all"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent" />
-
-        <TextView
-            android:layout_width="40dip"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:layout_marginRight="40dip" />
 
         <TextView
             android:layout_width="0dip"
