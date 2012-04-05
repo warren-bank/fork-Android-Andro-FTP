@@ -29,9 +29,12 @@
     <string name="server_manager_button_delete">Delete</string>
     <string name="server_manager_button_save">Save</string>
     <string name="server_manager_button_cancel">Cancel</string>
+    <string name="server_manager_hint_name">Required server name</string>
+    <string name="server_manager_hint_host">Required server host</string>
+    <string name="server_manager_hint_port">21</string>
+    <string name="server_manager_hint_username">Required username</string>
     <string name="server_manager_error_name_required">Server name is required</string>
     <string name="server_manager_error_host_required">Server host is required</string>
-    <string name="server_manager_error_port_required">Server port is required</string>
     <string name="server_manager_error_username_required">Server username is required</string>
     <string name="server_manager_error_password_required">Server password is required</string>
 
@@ -57,9 +60,24 @@
     <string name="transfer_label_size">Size</string>
     <string name="transfer_label_progress">Progress</string>
 
+    <!-- Messages -->
+    <string name="msg_1_element_selected">1 element selected</string>
+    <string name="msg_n_element_selected">%d elements selected</string>
+
     <!-- Error messages -->
+    <string name="err_file_already_exists">File already exists</string>
+    <string name="err_rename_file">Unknown error renaming file</string>
     <string name="err_folder_already_exists">Folder already exists</string>
     <string name="err_create_folder">Unknown error creating folder</string>
+    <string name="err_delete_file">Error delete folder</string>
+
+    <!-- File type description -->
+    <string name="file_type_format_folder">Folder</string>
+    <string name="file_type_format_unknown">Unknown</string>
+    
+    <!--  -->
+    <string name="file_icon_content_description">File icon</string>
+    <string name="go_parent_content_description">Go parent</string>
 
     <!-- String arrays -->
     <string-array name="order_by_list">

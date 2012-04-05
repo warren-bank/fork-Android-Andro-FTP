@@ -3,13 +3,14 @@ package net.abachar.androftp.filelist;
 import net.abachar.androftp.R;
 import net.abachar.androftp.filelist.manager.FileEntry;
 import net.abachar.androftp.filelist.manager.FileManager;
-import net.abachar.androftp.filelist.manager.FileManagerListener;
 import net.abachar.androftp.filelist.manager.FileManagerEvent;
+import net.abachar.androftp.filelist.manager.FileManagerListener;
 import net.abachar.androftp.filelist.manager.OrderBy;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -22,8 +23,6 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -31,70 +30,40 @@ import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-
-//<item
-//android:id="@+id/menu_upload"
-//android:icon="@drawable/ic_action_upload"
-//android:showAsAction="ifRoom"
-//android:title="@string/menu_upload"/>
-//<item
-//android:id="@+id/menu_download"
-//android:icon="@drawable/ic_action_download"
-//android:showAsAction="ifRoom"
-//android:title="@string/menu_download"/>
-//<item
-//android:id="@+id/menu_delete"
-//android:icon="@drawable/ic_action_delete"
-//android:showAsAction="ifRoom"
-//android:title="@string/menu_delete"/>
-//
-//
-//<item
-//android:id="@+id/menu_rename"
-//android:icon="@drawable/ic_action_rename"
-//android:showAsAction="ifRoom"
-//android:title="@string/menu_rename"/>
-//<item
-//android:id="@+id/menu_detail"
-//android:icon="@drawable/ic_action_detail"
-//android:showAsAction="ifRoom"
-//android:title="@string/menu_detail"/>
-
 /**
  * 
  * @author abachar
  */
-public abstract class AbstractManagerFragment extends Fragment implements FileManagerListener, OnCheckedChangeListener, OnClickListener, OnItemSelectedListener, OnItemClickListener {
+public abstract class AbstractManagerFragment extends Fragment implements FileManagerListener, OnClickListener, OnItemSelectedListener, OnItemClickListener {
 
-	/**
-	 * File manager
-	 */
-	protected FileManager wideBrowserFileManager;
-	protected FileManager smallBrowserFileManager;
+	/** */
+	protected int mFragmentLayoutId;
+	
+	/** Action mode */
+	protected ActionMode mActionMode;
+	protected boolean mMultiSelect;
 
-	/**
-	 * Wide browser
-	 */
-	protected CheckBox chkWideBrowserSelectAll;
-	protected ImageButton btnWideBrowserGoParent;
-	protected LinearLayout lytWideBrowserLoadingProgress;
-	protected TextView txtWideBrowserCWD;
-	protected Spinner spnWideBrowserOrderBy;
-	protected ListView lsvWideBrowserListFiles;
-	protected WideFileAdapter wideBrowserFileAdapter;
+	/** File managers */
+	protected FileManager mWideBrowserFileManager;
+	protected FileManager mSmallBrowserFileManager;
 
-	/**
-	 * Small browser
-	 */
-	protected ImageButton btnSmallBrowserGoParent;
-	protected LinearLayout lytSmallBrowserLoadingProgress;
-	protected TextView txtSmallBrowserCWD;
-	protected ListView lsvSmallBrowserListFiles;
-	protected SmallFileAdapter smallBrowserFileAdapter;
+	/** Wide browser items */
+	protected CheckBox mWideBrowserSelectAllCheckBox;
+	protected ImageButton mWideBrowserGoParentButton;
+	protected LinearLayout mWideBrowserLoadingProgress;
+	protected TextView mWideBrowserCurrentDirectoryText;
+	protected Spinner mWideBrowserOrderBySpinner;
+	protected ListView mWideBrowserFileListView;
+	protected WideFileAdapter mWideBrowserFileAdapter;
 
-	/**
-	 * Menus
-	 */
+	/** Small browser items */
+	protected ImageButton mSmallBrowserGoParentButton;
+	protected LinearLayout mSmallBrowserLoadingProgress;
+	protected TextView mSmallBrowserCurrentDirectoryText;
+	protected ListView mSmallBrowserFileListView;
+	protected SmallFileAdapter mSmallBrowserFileAdapter;
+
+	/** Menus */
 	protected MenuItem mRefreshMenu;
 	protected MenuItem mNewfolderMenu;
 
@@ -114,15 +83,15 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
 		// Inflate browser view
-		View view = inflater.inflate(R.layout.fragment_browsers, container, false);
+		View view = inflater.inflate(mFragmentLayoutId, container, false);
 
 		// Initialize user interface
 		initWideBrowserUI(view);
 		initSmallBrowserUI(view);
 
 		// Show files
-		wideBrowserFileManager.addFileManagerListener(this, FileManagerEvent.INITIAL_LIST_FILES, FileManagerEvent.WILL_LOAD_LIST_FILES, FileManagerEvent.DID_LOAD_LIST_FILES);
-		smallBrowserFileManager.addFileManagerListener(this, FileManagerEvent.INITIAL_LIST_FILES, FileManagerEvent.WILL_LOAD_LIST_FILES, FileManagerEvent.DID_LOAD_LIST_FILES);
+		mWideBrowserFileManager.addFileManagerListener(this, FileManagerEvent.INITIAL_LIST_FILES, FileManagerEvent.WILL_LOAD_LIST_FILES, FileManagerEvent.DID_LOAD_LIST_FILES);
+		mSmallBrowserFileManager.addFileManagerListener(this, FileManagerEvent.INITIAL_LIST_FILES, FileManagerEvent.WILL_LOAD_LIST_FILES, FileManagerEvent.DID_LOAD_LIST_FILES);
 
 		// Return created view
 		return view;
@@ -134,35 +103,35 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	private void initWideBrowserUI(View view) {
 
 		// Setup wide explorer select all check box
-		chkWideBrowserSelectAll = (CheckBox) view.findViewById(R.id.wide_browser_select_all);
-		chkWideBrowserSelectAll.setOnCheckedChangeListener(this);
+		mWideBrowserSelectAllCheckBox = (CheckBox) view.findViewById(R.id.wide_browser_select_all);
+		mWideBrowserSelectAllCheckBox.setOnClickListener(this);
 
 		// Setup wide explorer go parent button
-		btnWideBrowserGoParent = (ImageButton) view.findViewById(R.id.wide_browser_go_parent);
-		btnWideBrowserGoParent.setOnClickListener(this);
-		btnWideBrowserGoParent.setEnabled(wideBrowserFileManager.canGoParent());
+		mWideBrowserGoParentButton = (ImageButton) view.findViewById(R.id.wide_browser_go_parent);
+		mWideBrowserGoParentButton.setOnClickListener(this);
+		mWideBrowserGoParentButton.setEnabled(mWideBrowserFileManager.canGoParent());
 
 		// Loading progress bar
-		lytWideBrowserLoadingProgress = (LinearLayout) view.findViewById(R.id.wide_browser_loading_progress);
-		lytWideBrowserLoadingProgress.setVisibility(View.GONE);
+		mWideBrowserLoadingProgress = (LinearLayout) view.findViewById(R.id.wide_browser_loading_progress);
+		mWideBrowserLoadingProgress.setVisibility(View.GONE);
 
 		// Setup wide explorer current working directory text
-		txtWideBrowserCWD = (TextView) view.findViewById(R.id.wide_browser_cwd);
+		mWideBrowserCurrentDirectoryText = (TextView) view.findViewById(R.id.wide_browser_cwd);
 
 		// Setup wide explorer order by spinner
 		ArrayAdapter<CharSequence> wideBrowserOrderByAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.order_by_list, android.R.layout.simple_spinner_item);
 		wideBrowserOrderByAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		spnWideBrowserOrderBy = (Spinner) view.findViewById(R.id.wide_browser_order_by);
-		spnWideBrowserOrderBy.setAdapter(wideBrowserOrderByAdapter);
-		spnWideBrowserOrderBy.setOnItemSelectedListener(this);
+		mWideBrowserOrderBySpinner = (Spinner) view.findViewById(R.id.wide_browser_order_by);
+		mWideBrowserOrderBySpinner.setAdapter(wideBrowserOrderByAdapter);
+		mWideBrowserOrderBySpinner.setOnItemSelectedListener(this);
 
 		// Setup wide explorer file list
-		lsvWideBrowserListFiles = (ListView) view.findViewById(R.id.wide_browser_files);
-		lsvWideBrowserListFiles.setOnItemClickListener(this);
+		mWideBrowserFileListView = (ListView) view.findViewById(R.id.wide_browser_files);
+		mWideBrowserFileListView.setOnItemClickListener(this);
 
 		// Setup wide explorer list adapter
-		wideBrowserFileAdapter = new WideFileAdapter(this);
-		lsvWideBrowserListFiles.setAdapter(wideBrowserFileAdapter);
+		mWideBrowserFileAdapter = new WideFileAdapter(getActivity(), this);
+		mWideBrowserFileListView.setAdapter(mWideBrowserFileAdapter);
 	}
 
 	/**
@@ -171,24 +140,24 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	private void initSmallBrowserUI(View view) {
 
 		// Setup wide explorer go parent button
-		btnSmallBrowserGoParent = (ImageButton) view.findViewById(R.id.small_browser_go_parent);
-		btnSmallBrowserGoParent.setOnClickListener(this);
-		btnSmallBrowserGoParent.setEnabled(smallBrowserFileManager.canGoParent());
+		mSmallBrowserGoParentButton = (ImageButton) view.findViewById(R.id.small_browser_go_parent);
+		mSmallBrowserGoParentButton.setOnClickListener(this);
+		mSmallBrowserGoParentButton.setEnabled(mSmallBrowserFileManager.canGoParent());
 
 		// Setup wide explorer current working directory text
-		txtSmallBrowserCWD = (TextView) view.findViewById(R.id.small_browser_cwd);
+		mSmallBrowserCurrentDirectoryText = (TextView) view.findViewById(R.id.small_browser_cwd);
 
 		// Loading progress bar
-		lytSmallBrowserLoadingProgress = (LinearLayout) view.findViewById(R.id.small_browser_loading_progress);
-		lytSmallBrowserLoadingProgress.setVisibility(View.GONE);
+		mSmallBrowserLoadingProgress = (LinearLayout) view.findViewById(R.id.small_browser_loading_progress);
+		mSmallBrowserLoadingProgress.setVisibility(View.GONE);
 
 		// Setup wide explorer file list
-		lsvSmallBrowserListFiles = (ListView) view.findViewById(R.id.small_browser_files);
-		lsvSmallBrowserListFiles.setOnItemClickListener(this);
+		mSmallBrowserFileListView = (ListView) view.findViewById(R.id.small_browser_files);
+		mSmallBrowserFileListView.setOnItemClickListener(this);
 
 		// Setup wide explorer list adapter
-		smallBrowserFileAdapter = new SmallFileAdapter(this);
-		lsvSmallBrowserListFiles.setAdapter(smallBrowserFileAdapter);
+		mSmallBrowserFileAdapter = new SmallFileAdapter(getActivity());
+		mSmallBrowserFileListView.setAdapter(mSmallBrowserFileAdapter);
 	}
 
 	/**
@@ -216,8 +185,8 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	public boolean onOptionsItemSelected(MenuItem item) {
 
 		if (mRefreshMenu == item) {
-			wideBrowserFileManager.refresh();
-			smallBrowserFileManager.refresh();
+			mWideBrowserFileManager.refresh();
+			mSmallBrowserFileManager.refresh();
 			return true;
 		}
 
@@ -230,24 +199,66 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	}
 
 	/**
-	 * @see android.widget.CompoundButton.OnCheckedChangeListener#onCheckedChanged(android.widget.CompoundButton,
-	 *      boolean)
-	 */
-	@Override
-	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-		onWideBrowserSelectAllCheckedChanged(isChecked);
-	}
-
-	/**
 	 * @see android.view.View.OnClickListener#onClick(android.view.View)
 	 */
 	@Override
 	public void onClick(View view) {
 
-		if (view == btnWideBrowserGoParent) {
-			onWideBrowserGoParentButtonClick();
-		} else if (view == btnSmallBrowserGoParent) {
-			onSmallBrowserGoParentButtonClick();
+		int selectedCount, count;
+
+		switch (view.getId()) {
+
+			case R.id.wide_browser_go_parent:
+				onWideBrowserGoParentButtonClick();
+				break;
+
+			case R.id.small_browser_go_parent:
+				onSmallBrowserGoParentButtonClick();
+				break;
+
+			case R.id.wide_browser_select_all:
+				/* Event trigged from select all */
+				boolean checked = mWideBrowserSelectAllCheckBox.isChecked();
+				mWideBrowserFileAdapter.updateSelectAllFiles(checked);
+				count = mWideBrowserFileAdapter.getCount();
+				updateActionMode(checked ? count : 0, count);
+				break;
+
+			default:
+				count = mWideBrowserFileAdapter.getCount();
+				selectedCount = mWideBrowserFileAdapter.getSelectedCount();
+				mWideBrowserSelectAllCheckBox.setChecked(selectedCount == count);
+				updateActionMode(selectedCount, count);
+				break;
+		}
+	}
+
+	/**
+	 * 
+	 * @param selectedCount
+	 * @param count
+	 */
+	private void updateActionMode(int selectedCount, int count) {
+
+		// Manage action mode mode
+		if (selectedCount == 0) {
+			if (mActionMode != null) {
+				mActionMode.finish();
+			}
+		} else {
+			mMultiSelect = selectedCount > 1;
+
+			if (mActionMode == null) {
+				mActionMode = getActivity().startActionMode(mSelectAction);
+			} else {
+				mActionMode.invalidate();
+			}
+
+			if (!mMultiSelect) {
+				mActionMode.setTitle(getString(R.string.msg_1_element_selected));
+			} else {
+				mActionMode.setTitle(getString(R.string.msg_n_element_selected, selectedCount));
+			}
 		}
 	}
 
@@ -275,12 +286,12 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	@Override
 	public void onItemClick(AdapterView<?> listView, View view, int position, long id) {
 
-		if (listView == lsvWideBrowserListFiles) {
+		if (listView == mWideBrowserFileListView) {
 			onWideBrowserListItemClick(view, position, id);
-			btnWideBrowserGoParent.setEnabled(true);
-		} else if (listView == lsvSmallBrowserListFiles) {
+			mWideBrowserGoParentButton.setEnabled(true);
+		} else if (listView == mSmallBrowserFileListView) {
 			onSmallBrowserListItemClick(view, position, id);
-			btnSmallBrowserGoParent.setEnabled(true);
+			mSmallBrowserGoParentButton.setEnabled(true);
 		}
 	}
 
@@ -293,35 +304,35 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 
 		switch (msg) {
 			case WILL_LOAD_LIST_FILES:
-				if (fm == wideBrowserFileManager) {
-					txtWideBrowserCWD.setText(getString(R.string.loading));
-					wideBrowserFileAdapter.setFiles(null);
-					btnWideBrowserGoParent.setVisibility(View.GONE);
-					lytWideBrowserLoadingProgress.setVisibility(View.VISIBLE);
-					chkWideBrowserSelectAll.setEnabled(false);
-				} else if (fm == smallBrowserFileManager) {
-					txtSmallBrowserCWD.setText(getString(R.string.loading));
-					smallBrowserFileAdapter.setFiles(null);
-					btnSmallBrowserGoParent.setVisibility(View.GONE);
-					lytSmallBrowserLoadingProgress.setVisibility(View.VISIBLE);
+				if (fm == mWideBrowserFileManager) {
+					mWideBrowserCurrentDirectoryText.setText(getString(R.string.loading));
+					mWideBrowserFileAdapter.setFiles(null);
+					mWideBrowserGoParentButton.setVisibility(View.GONE);
+					mWideBrowserLoadingProgress.setVisibility(View.VISIBLE);
+					mWideBrowserSelectAllCheckBox.setEnabled(false);
+				} else if (fm == mSmallBrowserFileManager) {
+					mSmallBrowserCurrentDirectoryText.setText(getString(R.string.loading));
+					mSmallBrowserFileAdapter.setFiles(null);
+					mSmallBrowserGoParentButton.setVisibility(View.GONE);
+					mSmallBrowserLoadingProgress.setVisibility(View.VISIBLE);
 				}
 				break;
 
 			case INITIAL_LIST_FILES:
 			case DID_LOAD_LIST_FILES:
-				if (fm == wideBrowserFileManager) {
-					txtWideBrowserCWD.setText(fm.getCurrentPath());
-					wideBrowserFileAdapter.setFiles(fm.getFiles());
-					lytWideBrowserLoadingProgress.setVisibility(View.GONE);
-					btnWideBrowserGoParent.setVisibility(View.VISIBLE);
-					btnWideBrowserGoParent.setEnabled(wideBrowserFileManager.canGoParent());
-					chkWideBrowserSelectAll.setEnabled((fm.getFiles() != null) && !fm.getFiles().isEmpty());
-				} else if (fm == smallBrowserFileManager) {
-					txtSmallBrowserCWD.setText(fm.getCurrentPath());
-					smallBrowserFileAdapter.setFiles(fm.getFiles());
-					lytSmallBrowserLoadingProgress.setVisibility(View.GONE);
-					btnSmallBrowserGoParent.setVisibility(View.VISIBLE);
-					btnSmallBrowserGoParent.setEnabled(smallBrowserFileManager.canGoParent());
+				if (fm == mWideBrowserFileManager) {
+					mWideBrowserCurrentDirectoryText.setText(fm.getCurrentPath());
+					mWideBrowserFileAdapter.setFiles(fm.getFiles());
+					mWideBrowserLoadingProgress.setVisibility(View.GONE);
+					mWideBrowserGoParentButton.setVisibility(View.VISIBLE);
+					mWideBrowserGoParentButton.setEnabled(mWideBrowserFileManager.canGoParent());
+					mWideBrowserSelectAllCheckBox.setEnabled((fm.getFiles() != null) && !fm.getFiles().isEmpty());
+				} else if (fm == mSmallBrowserFileManager) {
+					mSmallBrowserCurrentDirectoryText.setText(fm.getCurrentPath());
+					mSmallBrowserFileAdapter.setFiles(fm.getFiles());
+					mSmallBrowserLoadingProgress.setVisibility(View.GONE);
+					mSmallBrowserGoParentButton.setVisibility(View.VISIBLE);
+					mSmallBrowserGoParentButton.setEnabled(mSmallBrowserFileManager.canGoParent());
 				}
 				break;
 		}
@@ -329,26 +340,25 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 
 	/**
 	 * 
-	 * @param directory directory path to create the new folder in.
+	 * @param directory
+	 *            directory path to create the new folder in.
 	 */
 	public void onWideBrowserCreateNewFolder() {
-		
+
 		AlertDialog.Builder prompt = new AlertDialog.Builder(getActivity());
-		
+
 		// Title and message
 		prompt.setTitle("Create a new Folder");
-		prompt.setMessage("Type the name of the folder you would like to create.");
-		
-		// Set an EditText view to get user input 
+
+		// Set an EditText view to get user input
 		final EditText input = new EditText(getActivity());
 		prompt.setView(input);
-		
+
 		prompt.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
 				String name = input.getText().toString();
 				if (name.length() > 0) {
-					wideBrowserFileManager.createNewfolder(name);
-					dialog.dismiss();
+					mWideBrowserFileManager.createNewfolder(name);
 				}
 			}
 		});
@@ -361,20 +371,16 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 
 		prompt.show();
 	}
-	
-	/**
-	 * 
-	 * @param isChecked
-	 */
-	protected void onWideBrowserSelectAllCheckedChanged(boolean isChecked) {
-		wideBrowserFileAdapter.selectAllFiles(isChecked);
-	}
 
 	/**
 	 * 
 	 */
 	protected void onWideBrowserGoParentButtonClick() {
-		wideBrowserFileManager.changeToParentDirectory();
+		if (mActionMode != null) {
+			mActionMode.finish();
+		}
+
+		mWideBrowserFileManager.changeToParentDirectory();
 	}
 
 	/**
@@ -382,7 +388,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	 * @param orderBy
 	 */
 	protected void onWideBrowserOrderByChange(OrderBy orderBy) {
-		wideBrowserFileManager.changeOrderBy(orderBy);
+		mWideBrowserFileManager.changeOrderBy(orderBy);
 	}
 
 	/**
@@ -392,10 +398,13 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	 * @param id
 	 */
 	protected void onWideBrowserListItemClick(View view, int position, long id) {
+		if (mActionMode != null) {
+			mActionMode.finish();
+		}
 
-		FileEntry file = (FileEntry) wideBrowserFileAdapter.getItem(position);
+		FileEntry file = (FileEntry) mWideBrowserFileAdapter.getItem(position);
 		if (file.isFolder()) {
-			wideBrowserFileManager.changeWorkingDirectory(file.getName());
+			mWideBrowserFileManager.changeWorkingDirectory(file.getName());
 		}
 	}
 
@@ -403,7 +412,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	 * 
 	 */
 	protected void onSmallBrowserGoParentButtonClick() {
-		smallBrowserFileManager.changeToParentDirectory();
+		mSmallBrowserFileManager.changeToParentDirectory();
 	}
 
 	/**
@@ -414,9 +423,58 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	 */
 	protected void onSmallBrowserListItemClick(View view, int position, long id) {
 
-		FileEntry file = (FileEntry) smallBrowserFileAdapter.getItem(position);
+		FileEntry file = (FileEntry) mSmallBrowserFileAdapter.getItem(position);
 		if (file.isFolder()) {
-			smallBrowserFileManager.changeWorkingDirectory(file.getName());
+			mSmallBrowserFileManager.changeWorkingDirectory(file.getName());
 		}
 	}
+
+	/**
+	 * 
+	 */
+	protected ActionMode.Callback mSelectAction = new ActionMode.Callback() {
+
+		/**
+		 * @see android.view.ActionMode.Callback#onCreateActionMode(android.view.ActionMode,
+		 *      android.view.Menu)
+		 */
+		@Override
+		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+			return _onCreateActionMode(menu);
+		}
+
+		/**
+		 * @see android.view.ActionMode.Callback#onPrepareActionMode(android.view.ActionMode,
+		 *      android.view.Menu)
+		 */
+		@Override
+		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+			return _onPrepareActionMode(menu);
+		}
+
+		/**
+		 * @see android.view.ActionMode.Callback#onActionItemClicked(android.view.ActionMode,
+		 *      android.view.MenuItem)
+		 */
+		@Override
+		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+			return _onActionItemClicked(item);
+		}
+
+		/**
+		 * @see android.view.ActionMode.Callback#onDestroyActionMode(android.view.ActionMode)
+		 */
+		@Override
+		public void onDestroyActionMode(ActionMode mode) {
+			mActionMode = null;
+			mWideBrowserSelectAllCheckBox.setChecked(false);
+			mWideBrowserFileAdapter.updateSelectAllFiles(false);
+		}
+	};
+
+	protected abstract boolean _onCreateActionMode(Menu menu);
+
+	protected abstract boolean _onPrepareActionMode(Menu menu);
+
+	protected abstract boolean _onActionItemClicked(MenuItem item);
 }

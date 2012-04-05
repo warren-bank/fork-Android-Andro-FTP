@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import net.abachar.androftp.R;
 
@@ -33,23 +34,23 @@ public class LocalFileManager extends AbstractFileManager {
 
 		// Initial order
 		if (bundle.containsKey("local.orderBy")) {
-			orderByComparator = new OrderByComparator((OrderBy) bundle.get("local.orderBy"));
+			mOrderByComparator = new OrderByComparator((OrderBy) bundle.get("local.orderBy"));
 		}
 
 		// Initial paths
 		if (bundle.containsKey("local.rootPath")) {
-			rootPath = bundle.getString("local.rootPath");
+			mRootPath = bundle.getString("local.rootPath");
 		} else {
-			rootPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+			mRootPath = Environment.getExternalStorageDirectory().getAbsolutePath();
 		}
 
 		if (bundle.containsKey("local.currentPath")) {
-			currentPath = bundle.getString("local.currentPath");
+			mCurrentPath = bundle.getString("local.currentPath");
 		} else {
-			currentPath = rootPath;
+			mCurrentPath = mRootPath;
 		}
 
-		inRootFolder = rootPath.equals(currentPath);
+		mInRootFolder = mRootPath.equals(mCurrentPath);
 	}
 
 	/**
@@ -58,7 +59,7 @@ public class LocalFileManager extends AbstractFileManager {
 	protected void doConnect() throws FileManagerException {
 
 		// Can read curent directory ?
-		File currentDir = new File(currentPath);
+		File currentDir = new File(mCurrentPath);
 		if (currentDir.canRead() && currentDir.isDirectory()) {
 			// Load files
 			loadFiles();
@@ -72,13 +73,13 @@ public class LocalFileManager extends AbstractFileManager {
 	protected void doChangeToParentDirectory() throws FileManagerException {
 
 		// Open current directory
-		File currentDir = new File(currentPath);
+		File currentDir = new File(mCurrentPath);
 
 		// Get parent path
-		currentPath = currentDir.getParent();
+		mCurrentPath = currentDir.getParent();
 
 		// refresh list files
-		inRootFolder = rootPath.equals(currentPath);
+		mInRootFolder = mRootPath.equals(mCurrentPath);
 		loadFiles();
 	}
 
@@ -89,14 +90,31 @@ public class LocalFileManager extends AbstractFileManager {
 	protected void doChangeWorkingDirectory(String dirname) throws FileManagerException {
 
 		// Change working directory
-		File dir = new File(currentPath + File.separator + dirname);
+		File dir = new File(mCurrentPath + File.separator + dirname);
 		if (dir.canRead() && dir.isDirectory()) {
-			currentPath = dir.getAbsolutePath();
+			mCurrentPath = dir.getAbsolutePath();
 
 			// refresh list files
-			inRootFolder = false;
+			mInRootFolder = false;
 			loadFiles();
 		}
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doDeleteFiles(java.util.List)
+	 */
+	@Override
+	protected void doDeleteFiles(List<FileEntry> files) throws FileManagerException {
+
+		for (FileEntry fileEntry : files) {
+			File file = new File(fileEntry.getAbsolutePath());
+			if (!file.delete()) {
+				Toast.makeText(mContext, R.string.err_delete_file, Toast.LENGTH_SHORT).show();
+			}
+		}
+		
+		// Refresh file list
+		loadFiles();
 	}
 
 	/**
@@ -104,7 +122,7 @@ public class LocalFileManager extends AbstractFileManager {
 	 */
 	@Override
 	protected void doCreateNewfolder(String name) throws FileManagerException {
-		String newFolder = currentPath + File.separator + name;
+		String newFolder = mCurrentPath + File.separator + name;
 
 		File folder = new File(newFolder);
 		if (folder.exists()) {
@@ -129,13 +147,35 @@ public class LocalFileManager extends AbstractFileManager {
 	}
 
 	/**
+	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doRenameFile(java.lang.String,
+	 *      java.lang.String)
+	 */
+	@Override
+	protected void doRenameFile(String fileName, String newFileName) throws FileManagerException {
+
+		// New file
+		File newFile = new File(mCurrentPath + File.separator + newFileName);
+		if (newFile.exists()) {
+			Toast.makeText(mContext, R.string.err_file_already_exists, Toast.LENGTH_SHORT).show();
+		} else {
+			File oldFile = new File(mCurrentPath + File.separator + fileName);
+			if (oldFile.renameTo(newFile)) {
+				// Refresh file list
+				loadFiles();
+			} else {
+				Toast.makeText(mContext, R.string.err_rename_file, Toast.LENGTH_SHORT).show();
+			}
+		}
+	}
+
+	/**
 	 * 
 	 */
 	private void loadFiles() {
-		files = null;
+		mFileList = null;
 
 		// Load local files
-		File[] list = (new File(currentPath)).listFiles(new FileFilter() {
+		File[] list = (new File(mCurrentPath)).listFiles(new FileFilter() {
 
 			@Override
 			public boolean accept(File f) {
@@ -145,20 +185,21 @@ public class LocalFileManager extends AbstractFileManager {
 
 		// Scan all files
 		if ((list != null) && (list.length > 0)) {
-			files = new ArrayList<FileEntry>();
+			mFileList = new ArrayList<FileEntry>();
 			for (File sf : list) {
 				FileEntry df = new FileEntry();
 				df.setName(sf.getName());
-				df.setPath(sf.getAbsolutePath());
+				df.setAbsolutePath(sf.getAbsolutePath());
+				df.setParentPath(mCurrentPath);
 				df.setSize(sf.length());
 				df.setType(FileType.fromFile(sf));
 				df.setLastModified(sf.lastModified());
 
-				files.add(df);
+				mFileList.add(df);
 			}
 
 			// Sort
-			Collections.sort(files, orderByComparator);
+			Collections.sort(mFileList, mOrderByComparator);
 		}
 	}
 }

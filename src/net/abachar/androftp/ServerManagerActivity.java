@@ -28,30 +28,29 @@ import android.widget.Toast;
  * @author abachar
  */
 public class ServerManagerActivity extends Activity implements OnClickListener, OnItemSelectedListener {
-	
-	/** */
-	private static final String PREFS_NAME = "AndroFTPPrefsFile";
-	private SharedPreferences settings;
 
-	/** Datasource */
-	private ServerDataSource ds;
-	private List<Server> listServers;
-	private ArrayAdapter<String> serverAdapter;
+	/** Shared preferences */
+	private SharedPreferences mSharedPreferences;
+
+	/** Server list */
+	private ServerDataSource mDataSource;
+	private List<Server> mServerList;
+	private ArrayAdapter<String> mServerAdapter;
 
 	/** Window components */
-	private Spinner spnServers;
-	private TextView txtServerName;
-	private TextView txtServerHost;
-	private TextView txtServerPort;
-	private TextView txtServerUsername;
-	private TextView txtServerPassword;
-	private RadioButton rdoLogonTypeAnonymous;
-	private RadioButton rdoLogonTypeNormal;
-	private Button btnConnect;
-	private Button btnNewServer;
-	private Button btnDelete;
-	private Button btnSave;
-	private Button btnCancel;
+	private Spinner mServerSpinner;
+	private TextView mServerNameText;
+	private TextView mServerHostText;
+	private TextView mServerPortText;
+	private TextView mServerUsernameText;
+	private TextView mServerPasswordText;
+	private RadioButton mLogonTypeAnonymousButton;
+	private RadioButton mLogonTypeNormalButton;
+	private Button mConnectButton;
+	private Button mNewServerButton;
+	private Button mDeleteButton;
+	private Button mSaveButton;
+	private Button mCancelButton;
 
 	/**
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
@@ -62,31 +61,28 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 
 		// Use server_manager view
 		setContentView(R.layout.server_manager);
-		
-		// Load settings
-		settings = getSharedPreferences(PREFS_NAME, 0);
+
+		// Load shared preferences
+		mSharedPreferences = getSharedPreferences(MainApplication.SHARED_PREFERENCES_NAME, 0);
 
 		// Initialize user interface
 		initUI();
 
-		// Load accounts
-		ds = new ServerDataSource(this);
-		listServers = ds.getAllServers();
+		// Load servers
+		mDataSource = new ServerDataSource(this);
+		mServerList = mDataSource.getAllServers();
 
-		// Setup accounts spinner
-		spnServers = (Spinner) findViewById(R.id.spn_servers);
-		spnServers.setOnItemSelectedListener(this);
+		// Setup servers spinner
+		mServerSpinner = (Spinner) findViewById(R.id.spn_servers);
+		mServerSpinner.setOnItemSelectedListener(this);
 
-		// Setup accounts spinner adapter
-		serverAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
-		serverAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		spnServers.setAdapter(serverAdapter);
-		
-		Long lastSelectedServer = settings.getLong("lastSelectedServer", -1);
-		fillServerAdapter(lastSelectedServer);
-		if (lastSelectedServer != -1) {
-			btnConnect.requestFocus();
-		}
+		// Setup servers spinner adapter
+		mServerAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
+		mServerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		mServerSpinner.setAdapter(mServerAdapter);
+
+		// Get last used server
+		fillServerAdapter(mSharedPreferences.getLong("lastSelectedServer", -1));
 	}
 
 	/**
@@ -95,27 +91,27 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 	public void initUI() {
 
 		// Setup edit account form
-		txtServerName = (TextView) findViewById(R.id.txt_server_name);
-		txtServerHost = (TextView) findViewById(R.id.txt_server_host);
-		txtServerPort = (TextView) findViewById(R.id.txt_server_port);
-		txtServerUsername = (TextView) findViewById(R.id.txt_server_username);
-		txtServerPassword = (TextView) findViewById(R.id.txt_server_password);
-		rdoLogonTypeAnonymous = (RadioButton) findViewById(R.id.rdo_logontype_anonymous);
-		rdoLogonTypeNormal = (RadioButton) findViewById(R.id.rdo_logontype_normal);
-		btnConnect = (Button) findViewById(R.id.btn_connect);
-		btnNewServer = (Button) findViewById(R.id.btn_newserver);
-		btnDelete = (Button) findViewById(R.id.btn_delete);
-		btnSave = (Button) findViewById(R.id.btn_save);
-		btnCancel = (Button) findViewById(R.id.btn_cancel);
+		mServerNameText = (TextView) findViewById(R.id.txt_server_name);
+		mServerHostText = (TextView) findViewById(R.id.txt_server_host);
+		mServerPortText = (TextView) findViewById(R.id.txt_server_port);
+		mServerUsernameText = (TextView) findViewById(R.id.txt_server_username);
+		mServerPasswordText = (TextView) findViewById(R.id.txt_server_password);
+		mLogonTypeAnonymousButton = (RadioButton) findViewById(R.id.rdo_logontype_anonymous);
+		mLogonTypeNormalButton = (RadioButton) findViewById(R.id.rdo_logontype_normal);
+		mConnectButton = (Button) findViewById(R.id.btn_connect);
+		mNewServerButton = (Button) findViewById(R.id.btn_newserver);
+		mDeleteButton = (Button) findViewById(R.id.btn_delete);
+		mSaveButton = (Button) findViewById(R.id.btn_save);
+		mCancelButton = (Button) findViewById(R.id.btn_cancel);
 
 		// Button OnClickListener
-		btnConnect.setOnClickListener(this);
-		btnNewServer.setOnClickListener(this);
-		btnDelete.setOnClickListener(this);
-		btnSave.setOnClickListener(this);
-		btnCancel.setOnClickListener(this);
-		rdoLogonTypeAnonymous.setOnClickListener(this);
-		rdoLogonTypeNormal.setOnClickListener(this);
+		mConnectButton.setOnClickListener(this);
+		mNewServerButton.setOnClickListener(this);
+		mDeleteButton.setOnClickListener(this);
+		mSaveButton.setOnClickListener(this);
+		mCancelButton.setOnClickListener(this);
+		mLogonTypeAnonymousButton.setOnClickListener(this);
+		mLogonTypeNormalButton.setOnClickListener(this);
 	}
 
 	/**
@@ -127,10 +123,10 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 		if (position == 0) {
 			onNewServerSelected();
 		} else {
-			btnConnect.setEnabled(true);
-			btnNewServer.setEnabled(true);
-			btnDelete.setEnabled(true);
-			fillServerDetails(listServers.get(position - 1));
+			mConnectButton.setEnabled(true);
+			mNewServerButton.setEnabled(true);
+			mDeleteButton.setEnabled(true);
+			fillServerDetails(mServerList.get(position - 1));
 		}
 	}
 
@@ -182,10 +178,10 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 		Intent intent = new Intent(this, MainActivity.class);
 
 		// Server data
-		Server server = listServers.get(spnServers.getSelectedItemPosition() - 1);
-		
-		// Save 
-		SharedPreferences.Editor editor = settings.edit();
+		Server server = mServerList.get(mServerSpinner.getSelectedItemPosition() - 1);
+
+		// Save
+		SharedPreferences.Editor editor = mSharedPreferences.edit();
 		editor.putLong("lastSelectedServer", server.getId());
 		editor.commit();
 
@@ -204,7 +200,7 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 	 * 
 	 */
 	private void onNewServer() {
-		spnServers.setSelection(0);
+		mServerSpinner.setSelection(0);
 		onNewServerSelected();
 	}
 
@@ -212,21 +208,21 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 	 *
 	 */
 	private void onNewServerSelected() {
-		btnConnect.setEnabled(false);
-		btnNewServer.setEnabled(false);
-		btnDelete.setEnabled(false);
-		fillServerDetails(new Server());
+		mConnectButton.setEnabled(false);
+		mNewServerButton.setEnabled(false);
+		mDeleteButton.setEnabled(false);
+		fillServerDetails(null);
 	}
 
 	/**
 	 * 
 	 */
 	private void onDelete() {
-		Server server = listServers.get(spnServers.getSelectedItemPosition() - 1);
-		if (ds.deleteServer(server.getId())) {
-			listServers.remove(server);
-			spnServers.setSelection(0);
-			serverAdapter.remove(server.getName());
+		Server server = mServerList.get(mServerSpinner.getSelectedItemPosition() - 1);
+		if (mDataSource.deleteServer(server.getId())) {
+			mServerList.remove(server);
+			mServerSpinner.setSelection(0);
+			mServerAdapter.remove(server.getName());
 		} else {
 			Toast.makeText(this, "Error : can't delete site '" + server.getName() + "' :(", Toast.LENGTH_SHORT).show();
 		}
@@ -256,37 +252,38 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 
 		try {
 			// Id
-			int selectedIndex = spnServers.getSelectedItemPosition();
+			int selectedIndex = mServerSpinner.getSelectedItemPosition();
 			if (selectedIndex == 0) {
 				server = new Server();
 				server.setId(-1);
 			} else {
-				server = listServers.get(selectedIndex - 1);
+				server = mServerList.get(selectedIndex - 1);
 			}
 
 			// Server name
-			String val = txtServerName.getText().toString().trim();
+			String val = mServerNameText.getText().toString().trim();
 			if (val.isEmpty()) {
 				throw new ValidationException(R.string.server_manager_error_name_required);
 			}
 			server.setName(val);
 
 			// Server host
-			val = txtServerHost.getText().toString().trim();
+			val = mServerHostText.getText().toString().trim();
 			if (val.isEmpty()) {
 				throw new ValidationException(R.string.server_manager_error_host_required);
 			}
 			server.setHost(val);
 
 			// Server port
-			val = txtServerPort.getText().toString().trim();
-			if (val.isEmpty()) {
-				throw new ValidationException(R.string.server_manager_error_port_required);
+			val = mServerPortText.getText().toString().trim();
+			if (!val.isEmpty()) {
+				server.setPort(Integer.valueOf(val));
+			} else {
+				server.setPort(21);
 			}
-			server.setPort(Integer.valueOf(val));
 
 			// Logon type
-			if (rdoLogonTypeAnonymous.isChecked()) {
+			if (mLogonTypeAnonymousButton.isChecked()) {
 				server.setLogontype(Logontype.ANONYMOUS);
 				server.setUsername(null);
 				server.setPassword(null);
@@ -294,14 +291,14 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 				server.setLogontype(Logontype.NORMAL);
 
 				// Server username
-				val = txtServerUsername.getText().toString().trim();
+				val = mServerUsernameText.getText().toString().trim();
 				if (val.isEmpty()) {
 					throw new ValidationException(R.string.server_manager_error_username_required);
 				}
 				server.setUsername(val);
 
 				// Server password
-				val = txtServerPassword.getText().toString().trim();
+				val = mServerPasswordText.getText().toString().trim();
 				if (val.isEmpty()) {
 					throw new ValidationException(R.string.server_manager_error_password_required);
 				}
@@ -309,13 +306,13 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 			}
 
 			// Save to database
-			ds.saveServer(server);
+			mDataSource.saveServer(server);
 			if (selectedIndex == 0) {
-				listServers.add(server);
+				mServerList.add(server);
 			}
 
 			// Sort the new list
-			Collections.sort(listServers, new Comparator<Server>() {
+			Collections.sort(mServerList, new Comparator<Server>() {
 				@Override
 				public int compare(Server lhs, Server rhs) {
 					return lhs.getName().toLowerCase().compareTo(rhs.getName().toLowerCase());
@@ -338,11 +335,11 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 	 * 
 	 */
 	private void onCancel() {
-		int selectedIndex = spnServers.getSelectedItemPosition();
+		int selectedIndex = mServerSpinner.getSelectedItemPosition();
 		if (selectedIndex == 0) {
-			fillServerDetails(new Server());
+			fillServerDetails(null);
 		} else {
-			fillServerDetails(listServers.get(selectedIndex - 1));
+			fillServerDetails(mServerList.get(selectedIndex - 1));
 		}
 	}
 
@@ -351,10 +348,10 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 	 * @param logontype
 	 */
 	private void onChangeLogontype(boolean isAnonymous) {
-		txtServerUsername.setText("");
-		txtServerPassword.setText("");
-		txtServerUsername.setEnabled(!isAnonymous);
-		txtServerPassword.setEnabled(!isAnonymous);
+		mServerUsernameText.setText("");
+		mServerPasswordText.setText("");
+		mServerUsernameText.setEnabled(!isAnonymous);
+		mServerPasswordText.setEnabled(!isAnonymous);
 	}
 
 	/**
@@ -362,24 +359,37 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 	 */
 	private void fillServerDetails(Server server) {
 
-		txtServerName.setText(server.getName());
-		txtServerHost.setText(server.getHost());
-		txtServerPort.setText(Integer.toString(server.getPort()));
+		if (server == null) {
+			mServerNameText.setText(null);
+			mServerHostText.setText(null);
+			mServerPortText.setText(null);
+			mServerUsernameText.setText(null);
+			mServerPasswordText.setText(null);
 
-		if (server.getLogontype() == Logontype.ANONYMOUS) {
-			rdoLogonTypeAnonymous.setChecked(true);
-			rdoLogonTypeNormal.setChecked(false);
-			txtServerUsername.setText("");
-			txtServerPassword.setText("");
-			txtServerUsername.setEnabled(false);
-			txtServerPassword.setEnabled(false);
+			mLogonTypeAnonymousButton.setChecked(false);
+			mLogonTypeNormalButton.setChecked(true);
+			mServerUsernameText.setEnabled(true);
+			mServerPasswordText.setEnabled(true);
 		} else {
-			rdoLogonTypeAnonymous.setChecked(false);
-			rdoLogonTypeNormal.setChecked(true);
-			txtServerUsername.setText(server.getUsername());
-			txtServerPassword.setText(server.getPassword());
-			txtServerUsername.setEnabled(true);
-			txtServerPassword.setEnabled(true);
+			mServerNameText.setText(server.getName());
+			mServerHostText.setText(server.getHost());
+			mServerPortText.setText(Integer.toString(server.getPort()));
+
+			if (server.getLogontype() == Logontype.ANONYMOUS) {
+				mLogonTypeAnonymousButton.setChecked(true);
+				mLogonTypeNormalButton.setChecked(false);
+				mServerUsernameText.setText("");
+				mServerPasswordText.setText("");
+				mServerUsernameText.setEnabled(false);
+				mServerPasswordText.setEnabled(false);
+			} else {
+				mLogonTypeAnonymousButton.setChecked(false);
+				mLogonTypeNormalButton.setChecked(true);
+				mServerUsernameText.setText(server.getUsername());
+				mServerPasswordText.setText(server.getPassword());
+				mServerUsernameText.setEnabled(true);
+				mServerPasswordText.setEnabled(true);
+			}
 		}
 	}
 
@@ -390,17 +400,17 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 	private void fillServerAdapter(long toSelectId) {
 
 		// Clear list
-		if (!serverAdapter.isEmpty()) {
-			serverAdapter.clear();
+		if (!mServerAdapter.isEmpty()) {
+			mServerAdapter.clear();
 		}
 
 		// Add new server entry
-		serverAdapter.add(getString(R.string.server_manager_label_new_server));
+		mServerAdapter.add(getString(R.string.server_manager_label_new_server));
 
 		// Add servers items
 		int index = 0, selectedIndex = 0;
-		for (Server server : listServers) {
-			serverAdapter.add(server.getName());
+		for (Server server : mServerList) {
+			mServerAdapter.add(server.getName());
 
 			if (toSelectId == server.getId()) {
 				selectedIndex = index + 1;
@@ -408,6 +418,6 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 			index++;
 		}
 
-		spnServers.setSelection(selectedIndex);
+		mServerSpinner.setSelection(selectedIndex);
 	}
 }

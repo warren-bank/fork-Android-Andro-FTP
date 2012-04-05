@@ -16,30 +16,37 @@ import android.graphics.drawable.Drawable;
 public enum FileType {
 
 	// Documents
-	FOLDER(null, R.drawable.ic_file_folder),
+	FOLDER(null, R.drawable.ic_file_folder, R.string.file_type_format_folder),
 
 	// Character-based files
-	TEXT("txt", R.drawable.ic_file_txt),
+	TEXT("txt", R.drawable.ic_file_txt, R.string.file_type_format_unknown),
 
 	// Documents
-	DOC("doc", R.drawable.ic_file_doc), PPT("ppt", R.drawable.ic_file_ppt), XLS("xls", R.drawable.ic_file_xls), PDF("pdf", R.drawable.ic_file_pdf),
+	DOC("doc", R.drawable.ic_file_doc, R.string.file_type_format_unknown),
+	PPT("ppt", R.drawable.ic_file_ppt, R.string.file_type_format_unknown), 
+	XLS("xls", R.drawable.ic_file_xls, R.string.file_type_format_unknown), 
+	PDF("pdf", R.drawable.ic_file_pdf, R.string.file_type_format_unknown),
 
 	// Images
-	JPEG("jpg", R.drawable.ic_file_image), GIF("gif", R.drawable.ic_file_image), PNG("png", R.drawable.ic_file_image),
+	JPEG("jpg", R.drawable.ic_file_image, R.string.file_type_format_unknown), 
+	GIF("gif", R.drawable.ic_file_image, R.string.file_type_format_unknown), 
+	PNG("png", R.drawable.ic_file_image, R.string.file_type_format_unknown),
 
 	// Audio
-	MP3("mp3", R.drawable.ic_file_mp3),
+	MP3("mp3", R.drawable.ic_file_mp3, R.string.file_type_format_unknown),
 
 	// Video
-	AVI("avi", R.drawable.ic_file_video), MP4("mp4", R.drawable.ic_file_mp4),
+	AVI("avi", R.drawable.ic_file_video, R.string.file_type_format_unknown), 
+	MP4("mp4", R.drawable.ic_file_mp4, R.string.file_type_format_unknown),
 
 	// Uncknown files
-	UNKNOWN(null, R.drawable.ic_file_unknown);
+	UNKNOWN(null, R.drawable.ic_file_unknown, R.string.file_type_format_unknown);
 
 	/** Type extension */
 	private final String ext;
 	private final Integer iconId;
-	
+	private final int formatId;
+
 	/** Maps */
 	private final static HashMap<Integer, Drawable> icons = new HashMap<Integer, Drawable>();
 	private final static HashMap<String, FileType> cache = new HashMap<String, FileType>();
@@ -48,9 +55,10 @@ public enum FileType {
 	 * 
 	 * @param ext
 	 */
-	FileType(String ext, int iconId) {
+	FileType(String ext, int iconId, int formatId) {
 		this.ext = ext;
 		this.iconId = new Integer(iconId);
+		this.formatId = formatId;
 	}
 
 	/**
@@ -71,6 +79,13 @@ public enum FileType {
 	}
 
 	/**
+	 * @return the formatId
+	 */
+	public String getFormat() {
+		return MainApplication.getInstance().getString(formatId);
+	}
+
+	/**
 	 * 
 	 * @param name
 	 * @return
@@ -82,7 +97,7 @@ public enum FileType {
 		}
 		return fromFileName(file.getName());
 	}
-	
+
 	/**
 	 * 
 	 * @param name
@@ -95,7 +110,7 @@ public enum FileType {
 		}
 		return fromFileName(file.getName());
 	}
-	
+
 	/**
 	 * 
 	 * @param name

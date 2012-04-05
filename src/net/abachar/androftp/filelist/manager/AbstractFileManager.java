@@ -17,58 +17,40 @@ import android.util.Log;
  * @author abachar
  */
 public abstract class AbstractFileManager implements FileManager {
-	
-	/**
-	 * 
-	 */
+
+	/** Context */
 	protected Context mContext;
-	
-	/**
-	 * Update list files listeners
-	 */
-	protected Map<FileManagerEvent, Set<FileManagerListener>> listeners;
 
-	/**
-	 * 
-	 */
-	protected boolean connected;
+	/** File manager listeners */
+	protected Map<FileManagerEvent, Set<FileManagerListener>> mListeners;
 
-	/**
-	 * Root path
-	 */
-	protected boolean inRootFolder;
+	/** Connection status */
+	protected boolean mConnected;
 
-	/**
-	 * Root path
-	 */
-	protected String rootPath;
+	/** Root path */
+	protected String mRootPath;
+	protected boolean mInRootFolder;
 
-	/**
-	 * Current path
-	 */
-	protected String currentPath;
+	/** Current path */
+	protected String mCurrentPath;
 
-	/**
-	 * Order
-	 */
-	protected OrderByComparator orderByComparator;
+	/** Order */
+	protected OrderByComparator mOrderByComparator;
 
-	/**
-	 * List of files and directories
-	 */
-	protected List<FileEntry> files;
+	/** List of files and directories */
+	protected List<FileEntry> mFileList;
 
 	/**
 	 * Default constructor
 	 */
 	public AbstractFileManager(Context context) {
 		mContext = context;
-		listeners = new HashMap<FileManagerEvent, Set<FileManagerListener>>();
-		connected = false;
-		inRootFolder = true;
-		currentPath = null;
-		orderByComparator = new OrderByComparator(OrderBy.NAME);
-		files = null;
+		mListeners = new HashMap<FileManagerEvent, Set<FileManagerListener>>();
+		mConnected = false;
+		mInRootFolder = true;
+		mCurrentPath = null;
+		mOrderByComparator = new OrderByComparator(OrderBy.NAME);
+		mFileList = null;
 	}
 
 	/**
@@ -84,7 +66,7 @@ public abstract class AbstractFileManager implements FileManager {
 				try {
 					// Connection
 					doConnect();
-					connected = true;
+					mConnected = true;
 
 					// Notify listeners that the file list is ready
 					notifyListeners(FileManagerEvent.INITIAL_LIST_FILES);
@@ -97,7 +79,7 @@ public abstract class AbstractFileManager implements FileManager {
 					// notifyListeners(FileManagerMessage.ERROR_CONNECTION);
 					// return false;
 				} catch (FileManagerException ex) {
-					connected = false;
+					mConnected = false;
 					Log.e("AFM", "connect exception", ex);
 
 					// Send error connexion and skip end message
@@ -115,7 +97,7 @@ public abstract class AbstractFileManager implements FileManager {
 	public void changeToParentDirectory() {
 
 		// Can we go to parent folder
-		if (!inRootFolder) {
+		if (!mInRootFolder) {
 			/** Excute a command asynchronously */
 			execAsyncCommand(FileManagerEvent.WILL_LOAD_LIST_FILES, FileManagerEvent.DID_LOAD_LIST_FILES, new AsyncCommand() {
 				public boolean execute() {
@@ -163,19 +145,42 @@ public abstract class AbstractFileManager implements FileManager {
 	public void changeOrderBy(final OrderBy orderBy) {
 
 		// Update order by
-		orderByComparator.orderBy = orderBy;
+		mOrderByComparator.orderBy = orderBy;
 
 		// Re-order files if needed
-		if ((files != null) && !files.isEmpty()) {
+		if ((mFileList != null) && !mFileList.isEmpty()) {
 
 			/** Excute a command asynchronously */
 			execAsyncCommand(FileManagerEvent.WILL_LOAD_LIST_FILES, FileManagerEvent.DID_LOAD_LIST_FILES, new AsyncCommand() {
 				public boolean execute() {
-					Collections.sort(files, orderByComparator);
+					Collections.sort(mFileList, mOrderByComparator);
 					return true;
 				}
 			});
 		}
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.manager.FileManager#deleteFiles(java.util.List)
+	 */
+	@Override
+	public void deleteFiles(final List<FileEntry> files) {
+
+		/** Excute a command asynchronously */
+		execAsyncCommand(FileManagerEvent.WILL_LOAD_LIST_FILES, FileManagerEvent.DID_LOAD_LIST_FILES, new AsyncCommand() {
+			public boolean execute() {
+
+				try {
+					doDeleteFiles(files);
+					return true;
+				} catch (FileManagerException ex) {
+					Log.e("AFM", "refresh exception", ex);
+					// Send error connexion and skip end message
+					notifyListeners(FileManagerEvent.LOST_CONNECTION);
+					return false;
+				}
+			}
+		});
 	}
 
 	/**
@@ -190,6 +195,30 @@ public abstract class AbstractFileManager implements FileManager {
 
 				try {
 					doCreateNewfolder(name);
+					return true;
+				} catch (FileManagerException ex) {
+					Log.e("AFM", "refresh exception", ex);
+					// Send error connexion and skip end message
+					notifyListeners(FileManagerEvent.LOST_CONNECTION);
+					return false;
+				}
+			}
+		});
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.manager.FileManager#renameFile(java.lang.String,
+	 *      java.lang.String)
+	 */
+	@Override
+	public void renameFile(final String fileName, final String newFileName) {
+
+		/** Excute a command asynchronously */
+		execAsyncCommand(FileManagerEvent.WILL_LOAD_LIST_FILES, FileManagerEvent.DID_LOAD_LIST_FILES, new AsyncCommand() {
+			public boolean execute() {
+
+				try {
+					doRenameFile(fileName, newFileName);
 					return true;
 				} catch (FileManagerException ex) {
 					Log.e("AFM", "refresh exception", ex);
@@ -247,7 +276,17 @@ public abstract class AbstractFileManager implements FileManager {
 	/**
 	 * 
 	 */
+	protected abstract void doDeleteFiles(List<FileEntry> files) throws FileManagerException;
+
+	/**
+	 * 
+	 */
 	protected abstract void doCreateNewfolder(String name) throws FileManagerException;
+
+	/**
+	 * 
+	 */
+	protected abstract void doRenameFile(String fileName, String newFileName) throws FileManagerException;
 
 	/**
 	 * 
@@ -256,11 +295,11 @@ public abstract class AbstractFileManager implements FileManager {
 
 		for (FileManagerEvent event : events) {
 
-			if (!listeners.containsKey(event)) {
-				listeners.put(event, new HashSet<FileManagerListener>());
+			if (!mListeners.containsKey(event)) {
+				mListeners.put(event, new HashSet<FileManagerListener>());
 			}
 
-			Set<FileManagerListener> l = listeners.get(event);
+			Set<FileManagerListener> l = mListeners.get(event);
 			if (!l.contains(listener)) {
 				l.add(listener);
 
@@ -277,7 +316,7 @@ public abstract class AbstractFileManager implements FileManager {
 	 */
 	@Override
 	public boolean isConnected() {
-		return connected;
+		return mConnected;
 	}
 
 	/**
@@ -285,7 +324,7 @@ public abstract class AbstractFileManager implements FileManager {
 	 */
 	@Override
 	public boolean canGoParent() {
-		return !inRootFolder;
+		return !mInRootFolder;
 	}
 
 	/**
@@ -293,7 +332,7 @@ public abstract class AbstractFileManager implements FileManager {
 	 */
 	@Override
 	public String getCurrentPath() {
-		return currentPath;
+		return mCurrentPath;
 	}
 
 	/**
@@ -301,7 +340,7 @@ public abstract class AbstractFileManager implements FileManager {
 	 */
 	@Override
 	public List<FileEntry> getFiles() {
-		return files;
+		return mFileList;
 	}
 
 	/**
@@ -349,7 +388,7 @@ public abstract class AbstractFileManager implements FileManager {
 	 * @param fmm
 	 */
 	protected void notifyListeners(FileManagerEvent fileManagerMessage) {
-		if (!listeners.isEmpty()) {
+		if (!mListeners.isEmpty()) {
 			Message msg = handler.obtainMessage();
 			msg.what = fileManagerMessage.ordinal();
 			msg.obj = this;
@@ -364,8 +403,8 @@ public abstract class AbstractFileManager implements FileManager {
 		public void handleMessage(Message msg) {
 			FileManagerEvent fmm = FileManagerEvent.values()[msg.what];
 
-			if (listeners.containsKey(fmm)) {
-				Set<FileManagerListener> l = listeners.get(fmm);
+			if (mListeners.containsKey(fmm)) {
+				Set<FileManagerListener> l = mListeners.get(fmm);
 				for (FileManagerListener listener : l) {
 					listener.onFileManagerEvent((FileManager) msg.obj, fmm);
 				}

@@ -6,11 +6,17 @@ package net.abachar.androftp.filelist.manager;
  */
 public class FileEntry {
 
+	/** */
+	private boolean checked;
+
 	/** File name */
 	private String name;
 
-	/** Absolute file path */
-	private String path;
+	/** Absolute file absolutePath */
+	private String absolutePath;
+
+	/** Absolute parent parentPath */
+	private String parentPath;
 
 	/** File type */
 	private FileType type;
@@ -20,6 +26,21 @@ public class FileEntry {
 
 	/** File last modified date */
 	private long lastModified;
+
+	/**
+	 * @return the checked
+	 */
+	public boolean isChecked() {
+		return checked;
+	}
+
+	/**
+	 * @param checked
+	 *            the checked to set
+	 */
+	public void setChecked(boolean checked) {
+		this.checked = checked;
+	}
 
 	/**
 	 * @return the name
@@ -37,18 +58,33 @@ public class FileEntry {
 	}
 
 	/**
-	 * @return the path
+	 * @return the absolutePath
 	 */
-	public String getPath() {
-		return path;
+	public String getAbsolutePath() {
+		return absolutePath;
 	}
 
 	/**
-	 * @param path
-	 *            the path to set
+	 * @param absolutePath
+	 *            the absolutePath to set
 	 */
-	public void setPath(String path) {
-		this.path = path;
+	public void setAbsolutePath(String absolutePath) {
+		this.absolutePath = absolutePath;
+	}
+
+	/**
+	 * @return the parentPath
+	 */
+	public String getParentPath() {
+		return parentPath;
+	}
+
+	/**
+	 * @param parentPath
+	 *            the parentPath to set
+	 */
+	public void setParentPath(String parentPath) {
+		this.parentPath = parentPath;
 	}
 
 	/**

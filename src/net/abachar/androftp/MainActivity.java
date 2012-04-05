@@ -22,14 +22,14 @@ import android.os.Bundle;
 public class MainActivity extends Activity implements ActionBar.TabListener, FileManagerListener {
 
 	/** Tab indexs and selected tab index */
-	private TabId selectedTab;
+	private TabId mSelectedTab;
 
 	/** File manages */
-	private FileManager localFileManager;
-	private FileManager serverFileManager;
+	private FileManager mLocalFileManager;
+	private FileManager mServerFileManager;
 
 	/** Connexion progress dialog */
-	private ProgressDialog connectProgress;
+	private ProgressDialog mProgressDialog;
 
 	/**
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
@@ -39,7 +39,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 		super.onCreate(savedInstanceState);
 
 		// Show waiting dialog
-		connectProgress = ProgressDialog.show(this, getString(R.string.connect_progress_title), getString(R.string.connect_progress_message), true, false);
+		mProgressDialog = ProgressDialog.show(this, getString(R.string.connect_progress_title), getString(R.string.connect_progress_message), true, false);
 
 		// Create map properties
 		final Bundle bundle = new Bundle();
@@ -59,21 +59,21 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 			}
 
 			// Setup selected tab
-			selectedTab = TabId.LOCAL_MANAGER;
+			mSelectedTab = TabId.LOCAL_MANAGER;
 		}
 
 		// Instanciate managers
-		localFileManager = new LocalFileManager(this);
-		serverFileManager = new LocalFileManager(this); // new FTPFileManager(this);
+		mLocalFileManager = new LocalFileManager(this);
+		mServerFileManager = new LocalFileManager(this); // new FTPFileManager(this);
 
 		// Listener
-		FileManagerEvent[] msgs = { FileManagerEvent.WILL_CONNECT, FileManagerEvent.DID_CONNECT, FileManagerEvent.ERROR_CONNECTION, FileManagerEvent.LOST_CONNECTION };
-		localFileManager.addFileManagerListener(this, msgs);
-		serverFileManager.addFileManagerListener(this, msgs);
+		FileManagerEvent[] events = { FileManagerEvent.WILL_CONNECT, FileManagerEvent.DID_CONNECT, FileManagerEvent.ERROR_CONNECTION, FileManagerEvent.LOST_CONNECTION };
+		mLocalFileManager.addFileManagerListener(this, events);
+		mServerFileManager.addFileManagerListener(this, events);
 
 		// Init file managers
-		localFileManager.init(bundle);
-		serverFileManager.init(bundle);
+		mLocalFileManager.init(bundle);
+		mServerFileManager.init(bundle);
 
 		// Use main view
 		setContentView(R.layout.main);
@@ -82,8 +82,8 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 		setupActionBar();
 
 		// Connect file managers
-		localFileManager.connect();
-		serverFileManager.connect();
+		mLocalFileManager.connect();
+		mServerFileManager.connect();
 	}
 
 	/**
@@ -109,7 +109,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 		}
 
 		// Set selected tab
-		actionBar.setSelectedNavigationItem(selectedTab.ordinal());
+		actionBar.setSelectedNavigationItem(mSelectedTab.ordinal());
 	}
 
 	/**
@@ -128,7 +128,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 		}
 
 		// Set selected tab
-		selectedTab = tag.tabId;
+		mSelectedTab = tag.tabId;
 	}
 
 	/**
@@ -161,14 +161,14 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 
 		switch (msg) {
 			case WILL_CONNECT:
-				if (!connectProgress.isShowing()) {
-					connectProgress.show();
+				if (!mProgressDialog.isShowing()) {
+					mProgressDialog.show();
 				}
 				break;
 
 			case DID_CONNECT:
-				if (localFileManager.isConnected() && serverFileManager.isConnected()) {
-					connectProgress.dismiss();
+				if (mLocalFileManager.isConnected() && mServerFileManager.isConnected()) {
+					mProgressDialog.dismiss();
 				}
 				break;
 
@@ -186,14 +186,14 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 	 * @return the localFileManager
 	 */
 	public FileManager getLocalFileManager() {
-		return localFileManager;
+		return mLocalFileManager;
 	}
 
 	/**
 	 * @return the serverFileManager
 	 */
 	public FileManager getServerFileManager() {
-		return serverFileManager;
+		return mServerFileManager;
 	}
 
 	/**

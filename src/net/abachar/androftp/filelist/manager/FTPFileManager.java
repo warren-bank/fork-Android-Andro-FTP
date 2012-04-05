@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import net.abachar.androftp.servers.Logontype;
 
@@ -49,7 +50,7 @@ public class FTPFileManager extends AbstractFileManager {
 
 		// Initial order
 		if (bundle.containsKey("server.orderBy")) {
-			orderByComparator = new OrderByComparator((OrderBy) bundle.get("server.orderBy"));
+			mOrderByComparator = new OrderByComparator((OrderBy) bundle.get("server.orderBy"));
 		}
 
 		// Server configuration
@@ -65,8 +66,8 @@ public class FTPFileManager extends AbstractFileManager {
 		}
 
 		// Not connected
-		rootPath = currentPath = "";
-		inRootFolder = true;
+		mRootPath = mCurrentPath = "";
+		mInRootFolder = true;
 	}
 
 	/**
@@ -106,7 +107,7 @@ public class FTPFileManager extends AbstractFileManager {
 			ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
 			ftpClient.enterLocalPassiveMode();
 
-			rootPath = currentPath = ftpClient.printWorkingDirectory();
+			mRootPath = mCurrentPath = ftpClient.printWorkingDirectory();
 
 			// Load files
 			loadFiles();
@@ -135,10 +136,10 @@ public class FTPFileManager extends AbstractFileManager {
 		// refresh list files
 		try {
 			if (ftpClient.changeToParentDirectory()) {
-				currentPath = ftpClient.printWorkingDirectory();
+				mCurrentPath = ftpClient.printWorkingDirectory();
 
 				// refresh list files
-				inRootFolder = rootPath.equals(currentPath);
+				mInRootFolder = mRootPath.equals(mCurrentPath);
 				loadFiles();
 			}
 		} catch (FTPConnectionClosedException e) {
@@ -156,11 +157,11 @@ public class FTPFileManager extends AbstractFileManager {
 
 		// Change working directory
 		try {
-			if (ftpClient.changeWorkingDirectory(currentPath + File.separator + dirname)) {
-				currentPath = ftpClient.printWorkingDirectory();
+			if (ftpClient.changeWorkingDirectory(mCurrentPath + File.separator + dirname)) {
+				mCurrentPath = ftpClient.printWorkingDirectory();
 
 				// refresh list files
-				inRootFolder = rootPath.equals(currentPath);
+				mInRootFolder = mRootPath.equals(mCurrentPath);
 				loadFiles();
 			}
 		} catch (FTPConnectionClosedException e) {
@@ -189,14 +190,33 @@ public class FTPFileManager extends AbstractFileManager {
 	}
 
 	/**
+	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doRenameFile(java.lang.String,
+	 *      java.lang.String)
+	 */
+	@Override
+	protected void doRenameFile(String fileName, String newFileName) throws FileManagerException {
+		// TODO Auto-generated method stub
+
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doDeleteFiles(java.util.List)
+	 */
+	@Override
+	protected void doDeleteFiles(List<FileEntry> files) throws FileManagerException {
+		// TODO Auto-generated method stub
+
+	}
+
+	/**
 	 * 
 	 */
 	private void loadFiles() {
-		files = null;
+		mFileList = null;
 
 		// Load server files
 		try {
-			FTPFile[] list = ftpClient.listFiles(currentPath, new FTPFileFilter() {
+			FTPFile[] list = ftpClient.listFiles(mCurrentPath, new FTPFileFilter() {
 				@Override
 				public boolean accept(FTPFile file) {
 					String fileName = file.getName();
@@ -211,20 +231,21 @@ public class FTPFileManager extends AbstractFileManager {
 
 			// Scan all files
 			if ((list != null) && (list.length > 0)) {
-				files = new ArrayList<FileEntry>();
+				mFileList = new ArrayList<FileEntry>();
 				for (FTPFile sf : list) {
 					FileEntry df = new FileEntry();
 					df.setName(sf.getName());
-					df.setPath(currentPath + File.separator + sf.getName());
+					df.setAbsolutePath(mCurrentPath + File.separator + sf.getName());
+					df.setParentPath(mCurrentPath);
 					df.setSize(sf.getSize());
 					df.setType(FileType.fromFTPFile(sf));
 					df.setLastModified(sf.getTimestamp().getTimeInMillis());
 
-					files.add(df);
+					mFileList.add(df);
 				}
 
 				// Sort
-				Collections.sort(files, orderByComparator);
+				Collections.sort(mFileList, mOrderByComparator);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

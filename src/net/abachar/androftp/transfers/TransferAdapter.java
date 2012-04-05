@@ -67,7 +67,6 @@ public class TransferAdapter extends BaseAdapter implements ListAdapter, OnClick
 			holder = new ViewHolder();
 			convertView = mInflater.inflate(R.layout.list_item_transfer, parent, false);
 			holder.mCheckbox = (CheckBox) convertView.findViewById(R.id.transfer_checkbox);
-			holder.mCheckbox.setTag(new Integer(position));
 			holder.mCheckbox.setOnClickListener(this);
 			holder.mDirection = (ImageView) convertView.findViewById(R.id.transfer_direction_icon);
 			holder.mSourcePath = (TextView) convertView.findViewById(R.id.transfer_source_path);
@@ -81,6 +80,7 @@ public class TransferAdapter extends BaseAdapter implements ListAdapter, OnClick
 
 		Transfer transfer = mTransferList.get(position);
 		holder.mCheckbox.setChecked(transfer.isChecked());
+		holder.mCheckbox.setTag(new Integer(position));
 		holder.mSourcePath.setText(transfer.getSourcePath());
 		holder.mDestinationPath.setText(transfer.getDestinationPath());
 		holder.mFileSize.setText(transfer.getFileSize());
@@ -140,12 +140,14 @@ public class TransferAdapter extends BaseAdapter implements ListAdapter, OnClick
 	 * @param selectAllChecked
 	 */
 	public void updateSelectAllTransfers(boolean isChecked) {
-		for (Transfer transfer : mTransferList) {
-			transfer.setChecked(isChecked);
-		}
+		if (mTransferList != null) {
+			for (Transfer transfer : mTransferList) {
+				transfer.setChecked(isChecked);
+			}
 
-		// Refresh view
-		notifyDataSetChanged();
+			// Refresh view
+			notifyDataSetChanged();
+		}
 	}
 
 	/**
@@ -162,7 +164,10 @@ public class TransferAdapter extends BaseAdapter implements ListAdapter, OnClick
 				mTransferList.add(transfer);
 			}
 		}
-
+		if (mTransferList.isEmpty()) {
+			mTransferList = null;
+		}
+		
 		// Refresh view
 		notifyDataSetChanged();
 	}
@@ -173,9 +178,11 @@ public class TransferAdapter extends BaseAdapter implements ListAdapter, OnClick
 	 */
 	public int getSelectedCount() {
 		int count = 0;
-		for (Transfer transfer : mTransferList) {
-			if (transfer.isChecked()) {
-				count++;
+		if (mTransferList != null) {
+			for (Transfer transfer : mTransferList) {
+				if (transfer.isChecked()) {
+					count++;
+				}
 			}
 		}
 

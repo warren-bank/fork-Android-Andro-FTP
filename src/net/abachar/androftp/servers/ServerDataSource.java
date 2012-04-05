@@ -44,7 +44,6 @@ public class ServerDataSource extends SQLiteOpenHelper {
 	@Override
 	public void onCreate(SQLiteDatabase db) {
 		db.execSQL(CREATE_QUERY);
-
 	}
 
 	/**
@@ -106,7 +105,7 @@ public class ServerDataSource extends SQLiteOpenHelper {
 			long id = db.insert(TABLE_SERVERS, null, values);
 			server.setId(id);
 		} else {
-			db.update("accounts", values, COLUMN_ID + " = " + server.getId(), null);
+			db.update(TABLE_SERVERS, values, COLUMN_ID + " = " + server.getId(), null);
 		}
 
 		return server;

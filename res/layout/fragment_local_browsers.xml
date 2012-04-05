@@ -29,15 +29,18 @@
                 android:id="@+id/wide_browser_go_parent"
                 android:layout_width="60dip"
                 android:layout_height="match_parent"
+                android:contentDescription="@string/go_parent_content_description"
                 android:gravity="center_vertical"
-                android:src="@drawable/goparent_selector" />
-            
+                android:src="@drawable/goparent_image" />
+
             <LinearLayout
                 android:id="@+id/wide_browser_loading_progress"
                 android:layout_width="60dip"
                 android:layout_height="wrap_content"
+                android:gravity="center"
                 android:orientation="horizontal"
-                android:paddingTop="5dip" android:gravity="center">
+                android:paddingTop="5dip" >
+
                 <ProgressBar
                     android:layout_width="30dip"
                     android:layout_height="30dip" />
@@ -82,15 +85,18 @@
                 android:id="@+id/small_browser_go_parent"
                 android:layout_width="60dip"
                 android:layout_height="match_parent"
+                android:contentDescription="@string/go_parent_content_description"
                 android:gravity="center_vertical"
-                android:src="@drawable/goparent_selector" />
+                android:src="@drawable/goparent_image" />
 
             <LinearLayout
                 android:id="@+id/small_browser_loading_progress"
                 android:layout_width="60dip"
                 android:layout_height="wrap_content"
+                android:gravity="center"
                 android:orientation="horizontal"
-                android:paddingTop="5dip" android:gravity="center">
+                android:paddingTop="5dip" >
+
                 <ProgressBar
                     android:layout_width="30dip"
                     android:layout_height="30dip" />

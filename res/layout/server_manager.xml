@@ -1,196 +1,209 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical"
-    android:padding="60dip" >
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:orientation="vertical"
+	android:padding="60dip"
+>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/server_manager_title_my_servers"
-        android:textSize="24dip" />
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/server_manager_title_my_servers"
+		android:textSize="24dip" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dip" >
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="50dip"
+	>
 
-        <TextView
-            android:layout_width="100dip"
-            android:layout_height="wrap_content"
-            android:text="@string/server_manager_label_select_server" />
+		<TextView
+			android:layout_width="100dip"
+			android:layout_height="wrap_content"
+			android:text="@string/server_manager_label_select_server" />
 
-        <Spinner
-            android:id="@+id/spn_servers"
-            android:layout_width="0dip"
-            android:layout_height="fill_parent"
-            android:layout_marginBottom="5dip"
-            android:layout_marginRight="10dip"
-            android:layout_marginTop="5dip"
-            android:layout_weight="1"
-            android:prompt="@string/server_manager_label_new_server" />
+		<Spinner
+			android:id="@+id/spn_servers"
+			android:layout_width="0dip"
+			android:layout_height="fill_parent"
+			android:layout_marginBottom="5dip"
+			android:layout_marginRight="10dip"
+			android:layout_marginTop="5dip"
+			android:layout_weight="1"
+			android:prompt="@string/server_manager_label_new_server" />
 
-        <Button
-            android:id="@+id/btn_connect"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="10dip"
-            android:text="@string/server_manager_button_connect" />
+		<Button
+			android:id="@+id/btn_connect"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginRight="10dip"
+			android:text="@string/server_manager_button_connect" />
 
-        <Button
-            android:id="@+id/btn_newserver"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="10dip"
-            android:text="@string/server_manager_button_newserver" />
+		<Button
+			android:id="@+id/btn_newserver"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginRight="10dip"
+			android:text="@string/server_manager_button_newserver" />
 
-        <Button
-            android:id="@+id/btn_delete"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/server_manager_button_delete" />
-    </LinearLayout>
+		<Button
+			android:id="@+id/btn_delete"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/server_manager_button_delete" />
+	</LinearLayout>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingTop="50dip"
-        android:text="@string/server_manager_title_server_details"
-        android:textSize="24dip" />
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:paddingTop="50dip"
+		android:text="@string/server_manager_title_server_details"
+		android:textSize="24dip" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical" >
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="vertical"
+	>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical" >
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:gravity="center_vertical"
+		>
 
-            <TextView
-                android:layout_width="100dip"
-                android:layout_height="wrap_content"
-                android:text="@string/server_manager_label_name" />
+			<TextView
+				android:layout_width="100dip"
+				android:layout_height="wrap_content"
+				android:text="@string/server_manager_label_name" />
 
-            <EditText
-                android:id="@+id/txt_server_name"
-                android:layout_width="0dip"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
-        </LinearLayout>
+			<EditText
+				android:id="@+id/txt_server_name"
+				android:layout_width="0dip"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"
+				android:hint="@string/server_manager_hint_name" />
+		</LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical" >
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:gravity="center_vertical"
+		>
 
-            <TextView
-                android:layout_width="100dip"
-                android:layout_height="wrap_content"
-                android:text="@string/server_manager_label_host" />
+			<TextView
+				android:layout_width="100dip"
+				android:layout_height="wrap_content"
+				android:text="@string/server_manager_label_host" />
 
-            <EditText
-                android:id="@+id/txt_server_host"
-                android:layout_width="0dip"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="30dip"
-                android:layout_weight="1" />
+			<EditText
+				android:id="@+id/txt_server_host"
+				android:layout_width="0dip"
+				android:layout_height="wrap_content"
+				android:layout_marginRight="30dip"
+				android:layout_weight="1"
+				android:hint="@string/server_manager_hint_host" />
 
-            <TextView
-                android:layout_width="100dip"
-                android:layout_height="wrap_content"
-                android:text="@string/server_manager_label_port" />
-
-            <EditText
-                android:id="@+id/txt_server_port"
-                android:layout_width="80dip"
-                android:layout_height="wrap_content"
-                android:inputType="number"
-                android:text="@string/default_port" />
+			<TextView
+				android:layout_width="100dip"
+				android:layout_height="wrap_content"
+				android:text="@string/server_manager_label_port" />
 
-        </LinearLayout>
+			<EditText
+				android:id="@+id/txt_server_port"
+				android:layout_width="80dip"
+				android:layout_height="wrap_content"
+				android:inputType="number"
+				android:hint="@string/server_manager_hint_port" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal" >
+		</LinearLayout>
 
-            <TextView
-                android:layout_width="100dip"
-                android:layout_height="wrap_content"
-                android:text="@string/server_manager_label_logontype" />
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:gravity="center_vertical"
+			android:orientation="horizontal"
+		>
 
-            <RadioGroup
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal" >
+			<TextView
+				android:layout_width="100dip"
+				android:layout_height="wrap_content"
+				android:text="@string/server_manager_label_logontype" />
 
-                <RadioButton
-                    android:id="@+id/rdo_logontype_anonymous"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="50dip"
-                    android:checked="true"
-                    android:text="@string/server_manager_label_logontype_anonymous" />
+			<RadioGroup
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:orientation="horizontal"
+			>
 
-                <RadioButton
-                    android:id="@+id/rdo_logontype_normal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/server_manager_label_logontype_normal" />
-            </RadioGroup>
-        </LinearLayout>
+				<RadioButton
+					android:id="@+id/rdo_logontype_anonymous"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginRight="50dip"
+					android:checked="true"
+					android:text="@string/server_manager_label_logontype_anonymous" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical" >
+				<RadioButton
+					android:id="@+id/rdo_logontype_normal"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/server_manager_label_logontype_normal" />
+			</RadioGroup>
+		</LinearLayout>
 
-            <TextView
-                android:layout_width="100dip"
-                android:layout_height="wrap_content"
-                android:text="@string/server_manager_label_username" />
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:gravity="center_vertical"
+		>
 
-            <EditText
-                android:id="@+id/txt_server_username"
-                android:layout_width="0dip"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="30dip"
-                android:layout_weight="1" />
+			<TextView
+				android:layout_width="100dip"
+				android:layout_height="wrap_content"
+				android:text="@string/server_manager_label_username" />
 
-            <TextView
-                android:layout_width="100dip"
-                android:layout_height="wrap_content"
-                android:text="@string/server_manager_label_password" />
+			<EditText
+				android:id="@+id/txt_server_username"
+				android:layout_width="0dip"
+				android:layout_height="wrap_content"
+				android:layout_marginRight="30dip"
+				android:layout_weight="1"
+				android:hint="@string/server_manager_hint_username" />
 
-            <EditText
-                android:id="@+id/txt_server_password"
-                android:layout_width="0dip"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:inputType="textPassword" />
-        </LinearLayout>
+			<TextView
+				android:layout_width="100dip"
+				android:layout_height="wrap_content"
+				android:text="@string/server_manager_label_password" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="right" >
+			<EditText
+				android:id="@+id/txt_server_password"
+				android:layout_width="0dip"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"
+				android:inputType="textPassword" />
+		</LinearLayout>
 
-            <Button
-                android:id="@+id/btn_save"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="10dip"
-                android:text="@string/server_manager_button_save" />
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:gravity="right"
+		>
 
-            <Button
-                android:id="@+id/btn_cancel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/server_manager_button_cancel" />
-        </LinearLayout>
-    </LinearLayout>
+			<Button
+				android:id="@+id/btn_save"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginRight="10dip"
+				android:text="@string/server_manager_button_save" />
+
+			<Button
+				android:id="@+id/btn_cancel"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text="@string/server_manager_button_cancel" />
+		</LinearLayout>
+	</LinearLayout>
 
 </LinearLayout>

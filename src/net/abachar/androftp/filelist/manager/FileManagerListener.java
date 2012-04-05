@@ -9,5 +9,5 @@ public interface FileManagerListener {
 	/**
 	 * 
 	 */
-	public void onFileManagerEvent(FileManager fm, FileManagerEvent event);
+	public void onFileManagerEvent(FileManager fileManager, FileManagerEvent event);
 }

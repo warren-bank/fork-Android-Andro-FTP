@@ -28,7 +28,7 @@ public interface FileManager {
 	/**
 	 * Install listener for messages
 	 */
-	public void addFileManagerListener(FileManagerListener listener, FileManagerEvent... messages);
+	public void addFileManagerListener(FileManagerListener listener, FileManagerEvent... events);
 
 	/**
 	 * Go to parent directory
@@ -62,9 +62,22 @@ public interface FileManager {
 
 	/**
 	 * 
+	 * @param files
+	 */
+	public void deleteFiles(List<FileEntry> files);
+
+	/**
+	 * 
 	 * @param name
 	 */
 	public void createNewfolder(String name);
+
+	/**
+	 * 
+	 * @param fileName
+	 * @param newFileName
+	 */
+	public void renameFile(String fileName, String newFileName);
 
 	/**
 	 * 

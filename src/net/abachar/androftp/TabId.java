@@ -1,7 +1,5 @@
 package net.abachar.androftp;
 
-import net.abachar.androftp.R;
-import net.abachar.androftp.console.ConsoleFragment;
 import net.abachar.androftp.filelist.LocalManagerFragment;
 import net.abachar.androftp.filelist.ServerManagerFragment;
 import net.abachar.androftp.transfers.TransferFragment;
@@ -12,9 +10,6 @@ import android.app.Fragment;
  * @author abachar
  */
 public enum TabId {
-
-	/** Console fragment */
-	CONSOLE(ConsoleFragment.class, R.string.main_tab_console),
 
 	/** Local file manager fragment */
 	LOCAL_MANAGER(LocalManagerFragment.class, R.string.main_tab_local),
@@ -35,6 +30,11 @@ public enum TabId {
 	 */
 	private final int textId;
 
+	/**
+	 * 
+	 * @param clazz
+	 * @param textId
+	 */
 	private TabId(Class<? extends Fragment> clazz, int textId) {
 		this.clazz = clazz;
 		this.textId = textId;

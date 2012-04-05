@@ -1,13 +1,18 @@
 package net.abachar.androftp;
 
+import android.app.Application;
+
 /**
  * 
  * @author abachar
  */
-public class MainApplication extends android.app.Application {
+public class MainApplication extends Application {
+
+	/** Shared preferences file */
+	public static final String SHARED_PREFERENCES_NAME = "AndroFTPSharedPreferences";
 
 	/** Unique instance */
-	private static MainApplication instance;
+	private static MainApplication mInstance;
 
 	/**
 	 * @see android.app.Application#onCreate()
@@ -15,7 +20,7 @@ public class MainApplication extends android.app.Application {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		instance = this;
+		mInstance = this;
 	}
 
 	/**
@@ -23,6 +28,6 @@ public class MainApplication extends android.app.Application {
 	 * @return
 	 */
 	public static MainApplication getInstance() {
-		return instance;
+		return mInstance;
 	}
 }
