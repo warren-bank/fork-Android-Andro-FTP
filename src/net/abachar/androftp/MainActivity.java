@@ -1,11 +1,14 @@
 package net.abachar.androftp;
 
 import net.abachar.androftp.R;
+import net.abachar.androftp.filelist.LocalManagerFragment;
+import net.abachar.androftp.filelist.ServerManagerFragment;
 import net.abachar.androftp.filelist.manager.FileManager;
 import net.abachar.androftp.filelist.manager.FileManagerListener;
 import net.abachar.androftp.filelist.manager.FileManagerEvent;
 import net.abachar.androftp.filelist.manager.LocalFileManager;
 import net.abachar.androftp.servers.Logontype;
+import net.abachar.androftp.transfers.TransferFragment;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.Activity;
@@ -101,7 +104,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 		// Create local tab
 		for (TabId tabId : TabId.values()) {
 			ActionBar.Tab tab = actionBar.newTab();
-			tab.setText(getString(tabId.getTextId()));
+			tab.setText(getString(tabId.textId));
 			tab.setTag(new TabTag(tabId));
 			tab.setTabListener(this);
 
@@ -207,7 +210,38 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 		TabTag(TabId tabId) {
 			this.tabId = tabId;
 			this.key = "andro-ftp-tab-index-" + tabId.ordinal();
-			this.className = tabId.getClazz().getName();
+			this.className = tabId.clazz.getName();
+		}
+	}
+	
+	/**
+	 * Tab ID
+	 */
+	enum TabId {
+
+		/** Local file manager fragment */
+		LOCAL_MANAGER(LocalManagerFragment.class, R.string.main_tab_local),
+
+		/** Server file manager fragment */
+		SERVER_MANAGER(ServerManagerFragment.class, R.string.main_tab_server),
+
+		/** Transfers fragment */
+		TRANSFER_MANAGER(TransferFragment.class, R.string.main_tab_transfers);
+
+		/** */
+		final Class<? extends Fragment> clazz;
+
+		/** */
+		final int textId;
+
+		/**
+		 * 
+		 * @param clazz
+		 * @param textId
+		 */
+		private TabId(Class<? extends Fragment> clazz, int textId) {
+			this.clazz = clazz;
+			this.textId = textId;
 		}
 	}
 }

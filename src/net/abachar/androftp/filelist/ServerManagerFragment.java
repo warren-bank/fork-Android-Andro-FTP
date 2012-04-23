@@ -48,7 +48,7 @@ public class ServerManagerFragment extends AbstractManagerFragment {
 	/**
 	 * 
 	 */
-	protected boolean _onCreateActionMode(Menu menu) {
+	protected boolean onCreateActionMode(Menu menu) {
 
 		// Menu download
 		mDownloadMenu = menu.add(Menu.NONE, 1, Menu.NONE, R.string.menu_download);
@@ -76,7 +76,7 @@ public class ServerManagerFragment extends AbstractManagerFragment {
 	/**
 	 * 
 	 */
-	protected boolean _onPrepareActionMode(Menu menu) {
+	protected boolean onPrepareActionMode(Menu menu) {
 
 		if (mMultiSelect) {
 			if (mRenameMenu.isEnabled()) {
@@ -102,7 +102,7 @@ public class ServerManagerFragment extends AbstractManagerFragment {
 	/**
 	 * 
 	 */
-	protected boolean _onActionItemClicked(MenuItem item) {
+	protected boolean onActionItemClicked(MenuItem item) {
 		return false;
 	}
 }

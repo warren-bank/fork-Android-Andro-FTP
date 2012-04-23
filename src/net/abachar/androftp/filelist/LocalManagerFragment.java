@@ -67,7 +67,7 @@ public class LocalManagerFragment extends AbstractManagerFragment {
 	/**
 	 * 
 	 */
-	protected boolean _onCreateActionMode(Menu menu) {
+	protected boolean onCreateActionMode(Menu menu) {
 
 		// Menu upload
 		mUploadMenu = menu.add(Menu.NONE, ID_MENU_UPLOAD, Menu.NONE, R.string.menu_upload);
@@ -95,7 +95,7 @@ public class LocalManagerFragment extends AbstractManagerFragment {
 	/**
 	 * 
 	 */
-	protected boolean _onPrepareActionMode(Menu menu) {
+	protected boolean onPrepareActionMode(Menu menu) {
 
 		if (mMultiSelect) {
 			if (mRenameMenu.isEnabled()) {
@@ -121,7 +121,7 @@ public class LocalManagerFragment extends AbstractManagerFragment {
 	/**
 	 * 
 	 */
-	protected boolean _onActionItemClicked(MenuItem item) {
+	protected boolean onActionItemClicked(MenuItem item) {
 
 		switch (item.getItemId()) {
 

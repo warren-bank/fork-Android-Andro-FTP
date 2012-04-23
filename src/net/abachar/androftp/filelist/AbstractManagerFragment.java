@@ -38,7 +38,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 
 	/** */
 	protected int mFragmentLayoutId;
-	
+
 	/** Action mode */
 	protected ActionMode mActionMode;
 	protected boolean mMultiSelect;
@@ -440,7 +440,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 		 */
 		@Override
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-			return _onCreateActionMode(menu);
+			return AbstractManagerFragment.this.onCreateActionMode(menu);
 		}
 
 		/**
@@ -449,7 +449,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 		 */
 		@Override
 		public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-			return _onPrepareActionMode(menu);
+			return AbstractManagerFragment.this.onPrepareActionMode(menu);
 		}
 
 		/**
@@ -458,7 +458,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 		 */
 		@Override
 		public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-			return _onActionItemClicked(item);
+			return AbstractManagerFragment.this.onActionItemClicked(item);
 		}
 
 		/**
@@ -472,9 +472,9 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 		}
 	};
 
-	protected abstract boolean _onCreateActionMode(Menu menu);
+	protected abstract boolean onCreateActionMode(Menu menu);
 
-	protected abstract boolean _onPrepareActionMode(Menu menu);
+	protected abstract boolean onPrepareActionMode(Menu menu);
 
-	protected abstract boolean _onActionItemClicked(MenuItem item);
+	protected abstract boolean onActionItemClicked(MenuItem item);
 }

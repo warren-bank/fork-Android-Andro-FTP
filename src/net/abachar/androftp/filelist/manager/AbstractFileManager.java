@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -58,36 +59,84 @@ public abstract class AbstractFileManager implements FileManager {
 	 */
 	@Override
 	public void connect() {
+		new BackgroundOperationTask(BackgroundOperation.CONNECT).execute("");
+	}
 
-		/** Excute a command asynchronously */
-		execAsyncCommand(FileManagerEvent.WILL_CONNECT, FileManagerEvent.DID_CONNECT, new AsyncCommand() {
-			public boolean execute() {
+	/**
+	 * Do work on second thread class
+	 */
+	private class BackgroundOperationTask extends AsyncTask<String, Void, String> {
 
-				try {
-					// Connection
-					doConnect();
-					mConnected = true;
+		/** Work type */
+		private BackgroundOperation mOperation;
 
-					// Notify listeners that the file list is ready
-					notifyListeners(FileManagerEvent.INITIAL_LIST_FILES);
+		/** */
+		public BackgroundOperationTask(BackgroundOperation operation) {
+			mOperation = operation;
+		}
 
-					return true;
-					// } catch (ConnectionException ex) {
-					// connected = false;
-					//
-					// // Send error connexion and skip end message
-					// notifyListeners(FileManagerMessage.ERROR_CONNECTION);
-					// return false;
-				} catch (FileManagerException ex) {
-					mConnected = false;
-					Log.e("AFM", "connect exception", ex);
+		/**
+		 * @see android.os.AsyncTask#onPreExecute()
+		 */
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
 
-					// Send error connexion and skip end message
-					notifyListeners(FileManagerEvent.ERROR_CONNECTION);
-					return false;
-				}
+			switch (mOperation) {
+
+				case CONNECT:
+					notifyListeners(FileManagerEvent.WILL_CONNECT);
+					break;
 			}
-		});
+		}
+
+		/**
+		 * @see android.os.AsyncTask#doInBackground(Params[])
+		 */
+		@Override
+		protected String doInBackground(String... params) {
+
+			try {
+				switch (mOperation) {
+
+					case CONNECT:
+						doConnect();
+						break;
+				}
+			} catch (ConnectionException ex) {
+
+			} catch (FileManagerException ex) {
+
+			}
+			return null;
+		}
+
+		/**
+		 * @see android.os.AsyncTask#onProgressUpdate(Progress[])
+		 */
+		@Override
+		protected void onProgressUpdate(Void... values) {
+			super.onProgressUpdate(values);
+		}
+
+		/**
+		 * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
+		 */
+		@Override
+		protected void onPostExecute(String result) {
+			super.onPostExecute(result);
+
+			switch (mOperation) {
+
+				case CONNECT:
+					mConnected = false; // true;
+
+					notifyListeners(FileManagerEvent.ERROR_CONNECTION);
+					// notifyListeners(FileManagerEvent.INITIAL_LIST_FILES);
+					// notifyListeners(FileManagerEvent.DID_CONNECT);
+					break;
+			}
+		}
 	}
 
 	/**
