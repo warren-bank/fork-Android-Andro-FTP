@@ -16,6 +16,11 @@ public interface FileManager {
 	public void init(Bundle bundle);
 
 	/**
+	 * Install listener for messages
+	 */
+	public void addListener(FileManagerListener listener);
+
+	/**
 	 * 
 	 */
 	public void connect();
@@ -24,11 +29,6 @@ public interface FileManager {
 	 * 
 	 */
 	public boolean isConnected();
-
-	/**
-	 * Install listener for messages
-	 */
-	public void addFileManagerListener(FileManagerListener listener, FileManagerEvent... events);
 
 	/**
 	 * Go to parent directory

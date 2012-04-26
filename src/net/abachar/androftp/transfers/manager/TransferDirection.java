@@ -1,4 +1,4 @@
-package net.abachar.androftp.transfers;
+package net.abachar.androftp.transfers.manager;
 
 /**
  * 

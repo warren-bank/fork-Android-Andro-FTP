@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.abachar.androftp.R;
+import net.abachar.androftp.transfers.manager.Transfer;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
@@ -83,13 +84,25 @@ public class TransferAdapter extends BaseAdapter implements ListAdapter, OnClick
 		holder.mCheckbox.setTag(new Integer(position));
 		holder.mSourcePath.setText(transfer.getSourcePath());
 		holder.mDestinationPath.setText(transfer.getDestinationPath());
-		holder.mFileSize.setText(transfer.getFileSize());
 		holder.mProgress.setProgress(transfer.getProgress());
 
 		if (transfer.isUpload()) {
 			holder.mDirection.setImageDrawable(mUploadIcon);
 		} else {
 			holder.mDirection.setImageDrawable(mDownloadIcon);
+		}
+
+		// File size
+		long size = transfer.getFileSize();
+		if (size < 1024) {
+			holder.mFileSize.setText(size + " o");
+		} else {
+			size = (size / 1024) + 1;
+			if (size > 1024) {
+				holder.mFileSize.setText((size / 1024) + " Mo");
+			} else {
+				holder.mFileSize.setText(size + " Ko");
+			}
 		}
 
 		return convertView;

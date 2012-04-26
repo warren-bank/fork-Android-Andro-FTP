@@ -1,7 +1,13 @@
 package net.abachar.androftp.filelist;
 
+import java.io.File;
+import java.util.List;
+
 import net.abachar.androftp.MainActivity;
 import net.abachar.androftp.R;
+import net.abachar.androftp.filelist.manager.FileEntry;
+import net.abachar.androftp.transfers.manager.Transfer;
+import net.abachar.androftp.transfers.manager.TransferDirection;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -14,12 +20,6 @@ import android.view.ViewGroup;
  * @author abachar
  */
 public class ServerManagerFragment extends AbstractManagerFragment {
-
-	/** */
-	private MenuItem mDownloadMenu;
-	private MenuItem mDeleteMenu;
-	private MenuItem mRenameMenu;
-	private MenuItem mDetailMenu;
 
 	/**
 	 * Default constructor.
@@ -46,8 +46,9 @@ public class ServerManagerFragment extends AbstractManagerFragment {
 	}
 
 	/**
-	 * 
+	 * @see net.abachar.androftp.filelist.AbstractManagerFragment#onCreateActionMode(android.view.Menu)
 	 */
+	@Override
 	protected boolean onCreateActionMode(Menu menu) {
 
 		// Menu download
@@ -55,54 +56,29 @@ public class ServerManagerFragment extends AbstractManagerFragment {
 		mDownloadMenu.setIcon(R.drawable.ic_action_download);
 		mDownloadMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 
-		// Menu delete
-		mDeleteMenu = menu.add(Menu.NONE, 2, Menu.NONE, R.string.menu_delete);
-		mDeleteMenu.setIcon(R.drawable.ic_action_delete);
-		mDeleteMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-
-		// Menu rename
-		mRenameMenu = menu.add(Menu.NONE, 1, Menu.NONE, R.string.menu_rename);
-		mRenameMenu.setIcon(R.drawable.ic_action_rename);
-		mRenameMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-
-		// Menu detail
-		mDetailMenu = menu.add(Menu.NONE, 1, Menu.NONE, R.string.menu_detail);
-		mDetailMenu.setIcon(R.drawable.ic_action_detail);
-		mDetailMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-
-		return true;
+		return super.onCreateActionMode(menu);
 	}
 
 	/**
-	 * 
+	 * @see net.abachar.androftp.filelist.AbstractManagerFragment#onMenuTransfer()
 	 */
-	protected boolean onPrepareActionMode(Menu menu) {
+	@Override
+	protected void onMenuTransfer() {
 
-		if (mMultiSelect) {
-			if (mRenameMenu.isEnabled()) {
-				mRenameMenu.setIcon(R.drawable.ic_action_rename_off);
-				mDetailMenu.setIcon(R.drawable.ic_action_detail_off);
-				mRenameMenu.setEnabled(false);
-				mDetailMenu.setEnabled(false);
-				return true;
-			}
-		} else {
-			if (!mRenameMenu.isEnabled()) {
-				mRenameMenu.setIcon(R.drawable.ic_action_rename);
-				mDetailMenu.setIcon(R.drawable.ic_action_detail);
-				mRenameMenu.setEnabled(true);
-				mDetailMenu.setEnabled(true);
-				return true;
-			}
+		List<FileEntry> selectedFiles = mWideBrowserFileAdapter.getSelectedFiles();
+		for (FileEntry file : selectedFiles) {
+
+			Transfer transfer = new Transfer();
+			transfer.setNewTransfer(true);
+			transfer.setDirection(TransferDirection.DOWNLOAD);
+			transfer.setSourcePath(file.getAbsolutePath());
+			transfer.setDestinationPath(mSmallBrowserFileManager.getCurrentPath() + File.separator + file.getName());
+			transfer.setFileSize(file.getSize());
+			transfer.setProgress(0);
+
+			mTransferManager.addTransfer(transfer);
 		}
 
-		return false;
-	}
-
-	/**
-	 * 
-	 */
-	protected boolean onActionItemClicked(MenuItem item) {
-		return false;
+		mActionMode.finish();
 	}
 }

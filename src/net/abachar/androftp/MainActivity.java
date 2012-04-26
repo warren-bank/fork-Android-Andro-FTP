@@ -3,12 +3,14 @@ package net.abachar.androftp;
 import net.abachar.androftp.R;
 import net.abachar.androftp.filelist.LocalManagerFragment;
 import net.abachar.androftp.filelist.ServerManagerFragment;
+import net.abachar.androftp.filelist.manager.FTPFileManager;
 import net.abachar.androftp.filelist.manager.FileManager;
 import net.abachar.androftp.filelist.manager.FileManagerListener;
 import net.abachar.androftp.filelist.manager.FileManagerEvent;
 import net.abachar.androftp.filelist.manager.LocalFileManager;
 import net.abachar.androftp.servers.Logontype;
 import net.abachar.androftp.transfers.TransferFragment;
+import net.abachar.androftp.transfers.manager.TransferManager;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.Activity;
@@ -27,9 +29,10 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 	/** Tab indexs and selected tab index */
 	private TabId mSelectedTab;
 
-	/** File manages */
+	/** Manages */
 	private FileManager mLocalFileManager;
 	private FileManager mServerFileManager;
+	private TransferManager mTransferManager;
 
 	/** Connexion progress dialog */
 	private ProgressDialog mProgressDialog;
@@ -66,13 +69,13 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 		}
 
 		// Instanciate managers
+		mTransferManager = new TransferManager();
 		mLocalFileManager = new LocalFileManager(this);
-		mServerFileManager = new LocalFileManager(this); // new FTPFileManager(this);
+		mServerFileManager = new FTPFileManager(this);
 
 		// Listener
-		FileManagerEvent[] events = { FileManagerEvent.WILL_CONNECT, FileManagerEvent.DID_CONNECT, FileManagerEvent.ERROR_CONNECTION, FileManagerEvent.LOST_CONNECTION };
-		mLocalFileManager.addFileManagerListener(this, events);
-		mServerFileManager.addFileManagerListener(this, events);
+		mLocalFileManager.addListener(this);
+		mServerFileManager.addListener(this);
 
 		// Init file managers
 		mLocalFileManager.init(bundle);
@@ -200,6 +203,13 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 	}
 
 	/**
+	 * @return the mTransferManager
+	 */
+	public TransferManager getTransferManager() {
+		return mTransferManager;
+	}
+
+	/**
 	 * Tab tag
 	 */
 	private class TabTag {
@@ -213,7 +223,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 			this.className = tabId.clazz.getName();
 		}
 	}
-	
+
 	/**
 	 * Tab ID
 	 */

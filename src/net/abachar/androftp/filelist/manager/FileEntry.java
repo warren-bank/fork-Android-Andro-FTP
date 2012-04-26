@@ -28,6 +28,19 @@ public class FileEntry {
 	private long lastModified;
 
 	/**
+	 * 
+	 */
+	public FileEntry() {
+	}
+
+	/**
+	 * 
+	 */
+	public FileEntry(String name) {
+		this.name = name;
+	}
+
+	/**
 	 * @return the checked
 	 */
 	public boolean isChecked() {

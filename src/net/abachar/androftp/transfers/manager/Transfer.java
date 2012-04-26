@@ -1,4 +1,4 @@
-package net.abachar.androftp.transfers;
+package net.abachar.androftp.transfers.manager;
 
 /**
  * 
@@ -10,6 +10,9 @@ public class Transfer {
 	private boolean checked;
 
 	/** */
+	private boolean newTransfer;
+
+	/** */
 	private TransferDirection direction;
 
 	/** */
@@ -19,22 +22,10 @@ public class Transfer {
 	private String destinationPath;
 
 	/** */
-	private String fileSize;
+	private long fileSize;
 
 	/** */
 	private int progress;
-
-	/**
-	 * Default constructor
-	 */
-	public Transfer() {
-		checked = false;
-		direction = TransferDirection.UPLOAD;
-		sourcePath = "";
-		destinationPath = "";
-		fileSize = "";
-		progress = 0;
-	}
 
 	/**
 	 * @return the checked
@@ -49,6 +40,21 @@ public class Transfer {
 	 */
 	public void setChecked(boolean checked) {
 		this.checked = checked;
+	}
+
+	/**
+	 * @return the newTransfer
+	 */
+	public boolean isNewTransfer() {
+		return newTransfer;
+	}
+
+	/**
+	 * @param newTransfer
+	 *            the newTransfer to set
+	 */
+	public void setNewTransfer(boolean newTransfer) {
+		this.newTransfer = newTransfer;
 	}
 
 	/**
@@ -99,7 +105,7 @@ public class Transfer {
 	/**
 	 * @return the fileSize
 	 */
-	public String getFileSize() {
+	public long getFileSize() {
 		return fileSize;
 	}
 
@@ -107,7 +113,7 @@ public class Transfer {
 	 * @param fileSize
 	 *            the fileSize to set
 	 */
-	public void setFileSize(String fileSize) {
+	public void setFileSize(long fileSize) {
 		this.fileSize = fileSize;
 	}
 

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import net.abachar.androftp.servers.Logontype;
 
@@ -78,13 +77,6 @@ public class FTPFileManager extends AbstractFileManager {
 		// Connect
 		try {
 
-			// For test :)
-			try {
-				Thread.sleep(5000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-
 			// New ftp client
 			ftpClient = new FTPClient();
 
@@ -104,6 +96,8 @@ public class FTPFileManager extends AbstractFileManager {
 				}
 			}
 
+			mConnected = true;
+
 			ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
 			ftpClient.enterLocalPassiveMode();
 
@@ -111,13 +105,15 @@ public class FTPFileManager extends AbstractFileManager {
 
 			// Load files
 			loadFiles();
-			notifyListeners(FileManagerEvent.INITIAL_LIST_FILES);
 
 		} catch (SocketException e) {
+			mConnected = false;
 			throw new ConnectionException("E0101");
 		} catch (IOException e) {
+			mConnected = false;
 			throw new ConnectionException("E0102");
 		} catch (ConnectionException e) {
+			mConnected = false;
 			try {
 				ftpClient.disconnect();
 			} catch (IOException e1) {
@@ -133,7 +129,6 @@ public class FTPFileManager extends AbstractFileManager {
 	@Override
 	protected void doChangeToParentDirectory() throws FileManagerException {
 
-		// refresh list files
 		try {
 			if (ftpClient.changeToParentDirectory()) {
 				mCurrentPath = ftpClient.printWorkingDirectory();
@@ -150,14 +145,13 @@ public class FTPFileManager extends AbstractFileManager {
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.manager.FileManager#doChangeWorkingDirectory(java.util.String)
+	 * @see net.abachar.androftp.filelist.manager.FileManager#doChangeWorkingDirectory(net.abachar.androftp.filelist.manager.FileEntry)
 	 */
 	@Override
-	protected void doChangeWorkingDirectory(String dirname) throws FileManagerException {
+	protected void doChangeWorkingDirectory(FileEntry dir) throws FileManagerException {
 
-		// Change working directory
 		try {
-			if (ftpClient.changeWorkingDirectory(mCurrentPath + File.separator + dirname)) {
+			if (ftpClient.changeWorkingDirectory(dir.getAbsolutePath())) {
 				mCurrentPath = ftpClient.printWorkingDirectory();
 
 				// refresh list files
@@ -172,83 +166,141 @@ public class FTPFileManager extends AbstractFileManager {
 	}
 
 	/**
+	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doDeleteFiles(net.abachar.androftp.filelist.manager.FileEntry[])
+	 */
+	@Override
+	protected void doDeleteFiles(FileEntry[] files) throws FileManagerException {
+
+		try {
+			boolean ret;
+			for (FileEntry file : files) {
+
+				if (file.isFolder()) {
+					ret = ftpClient.removeDirectory(file.getName());
+				} else {
+					ret = ftpClient.deleteFile(file.getName());
+				}
+
+				if (!ret) {
+					// Toast.makeText(mContext, R.string.err_delete_file,
+					// Toast.LENGTH_SHORT).show(); Exception
+				}
+			}
+
+			// Refresh file list
+			loadFiles();
+
+		} catch (FTPConnectionClosedException e) {
+			throw new ConnectionException("E0151", e);
+		} catch (IOException e) {
+			throw new FileManagerException("E0161", e);
+		}
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doCreateNewfolder(net.abachar.androftp.filelist.manager.FileEntry)
+	 */
+	@Override
+	protected void doCreateNewfolder(FileEntry dir) throws FileManagerException {
+
+		try {
+
+			// Make directory
+			if (ftpClient.makeDirectory(dir.getName())) {
+				// Refresh file list
+				loadFiles();
+			} else {
+				// R.string.err_create_folder, Exception
+			}
+
+		} catch (FTPConnectionClosedException e) {
+			throw new ConnectionException("E0151", e);
+		} catch (IOException e) {
+			// Toast.makeText(mContext, R.string.err_rename_file,
+			// Toast.LENGTH_SHORT).show(); Exception
+			throw new FileManagerException("E0161", e);
+		}
+	}
+
+	/**
 	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doRefresh()
 	 */
 	@Override
 	protected void doRefresh() throws FileManagerException {
-		// TODO Auto-generated method stub
 
+		try {
+			// Refresh file list
+			loadFiles();
+
+		} catch (FTPConnectionClosedException e) {
+			throw new ConnectionException("E0151", e);
+		} catch (IOException e) {
+			throw new FileManagerException("E0161", e);
+		}
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doCreateNewfolder(java.lang.String)
+	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doRenameFile(net.abachar.androftp.filelist.manager.FileEntry,
+	 *      net.abachar.androftp.filelist.manager.FileEntry)
 	 */
 	@Override
-	protected void doCreateNewfolder(String name) throws FileManagerException {
-		// TODO Auto-generated method stub
+	protected void doRenameFile(FileEntry file, FileEntry newFile) throws FileManagerException {
+
+		try {
+
+			if (ftpClient.rename(file.getName(), newFile.getName())) {
+				// Refresh file list
+				loadFiles();
+			} else {
+				// R.string.err_rename_file, Exception
+			}
+
+		} catch (FTPConnectionClosedException e) {
+			throw new ConnectionException("E0151", e);
+		} catch (IOException e) {
+			throw new FileManagerException("E0161", e);
+		}
 
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doRenameFile(java.lang.String,
-	 *      java.lang.String)
-	 */
-	@Override
-	protected void doRenameFile(String fileName, String newFileName) throws FileManagerException {
-		// TODO Auto-generated method stub
-
-	}
-
-	/**
-	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doDeleteFiles(java.util.List)
-	 */
-	@Override
-	protected void doDeleteFiles(List<FileEntry> files) throws FileManagerException {
-		// TODO Auto-generated method stub
-
-	}
-
-	/**
+	 * @throws IOException
 	 * 
 	 */
-	private void loadFiles() {
+	private void loadFiles() throws IOException {
 		mFileList = null;
 
 		// Load server files
-		try {
-			FTPFile[] list = ftpClient.listFiles(mCurrentPath, new FTPFileFilter() {
-				@Override
-				public boolean accept(FTPFile file) {
-					String fileName = file.getName();
+		FTPFile[] list = ftpClient.listFiles(mCurrentPath, new FTPFileFilter() {
+			@Override
+			public boolean accept(FTPFile file) {
+				String fileName = file.getName();
 
-					if (file.isDirectory()) {
-						return !".".equals(fileName) && !"..".equals(fileName);
-					}
-
-					return !file.isSymbolicLink();
-				}
-			});
-
-			// Scan all files
-			if ((list != null) && (list.length > 0)) {
-				mFileList = new ArrayList<FileEntry>();
-				for (FTPFile sf : list) {
-					FileEntry df = new FileEntry();
-					df.setName(sf.getName());
-					df.setAbsolutePath(mCurrentPath + File.separator + sf.getName());
-					df.setParentPath(mCurrentPath);
-					df.setSize(sf.getSize());
-					df.setType(FileType.fromFTPFile(sf));
-					df.setLastModified(sf.getTimestamp().getTimeInMillis());
-
-					mFileList.add(df);
+				if (file.isDirectory()) {
+					return !".".equals(fileName) && !"..".equals(fileName);
 				}
 
-				// Sort
-				Collections.sort(mFileList, mOrderByComparator);
+				return !file.isSymbolicLink();
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
+		});
+
+		// Scan all files
+		if ((list != null) && (list.length > 0)) {
+			mFileList = new ArrayList<FileEntry>();
+			for (FTPFile sf : list) {
+				FileEntry df = new FileEntry();
+				df.setName(sf.getName());
+				df.setAbsolutePath(mCurrentPath + File.separator + sf.getName());
+				df.setParentPath(mCurrentPath);
+				df.setSize(sf.getSize());
+				df.setType(FileType.fromFTPFile(sf));
+				df.setLastModified(sf.getTimestamp().getTimeInMillis());
+
+				mFileList.add(df);
+			}
+
+			// Sort
+			Collections.sort(mFileList, mOrderByComparator);
 		}
 	}
 }

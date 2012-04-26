@@ -4,14 +4,10 @@ import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
-
-import net.abachar.androftp.R;
 
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Environment;
-import android.widget.Toast;
 
 /**
  * 
@@ -56,7 +52,7 @@ public class LocalFileManager extends AbstractFileManager {
 	/**
 	 * @see net.abachar.androftp.filelist.manager.FileManager#doConnect()
 	 */
-	protected void doConnect() throws FileManagerException {
+	protected void doConnect() {
 
 		// Can read curent directory ?
 		File currentDir = new File(mCurrentPath);
@@ -64,6 +60,8 @@ public class LocalFileManager extends AbstractFileManager {
 			// Load files
 			loadFiles();
 		}
+
+		mConnected = true;
 	}
 
 	/**
@@ -84,15 +82,15 @@ public class LocalFileManager extends AbstractFileManager {
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.manager.FileManager#doChangeWorkingDirectory(java.util.String)
+	 * @see net.abachar.androftp.filelist.manager.FileManager#doChangeWorkingDirectory(net.abachar.androftp.filelist.manager.FileEntry)
 	 */
 	@Override
-	protected void doChangeWorkingDirectory(String dirname) throws FileManagerException {
+	protected void doChangeWorkingDirectory(FileEntry dir) throws FileManagerException {
 
 		// Change working directory
-		File dir = new File(mCurrentPath + File.separator + dirname);
-		if (dir.canRead() && dir.isDirectory()) {
-			mCurrentPath = dir.getAbsolutePath();
+		File d = new File(dir.getAbsolutePath());
+		if (d.canRead() && d.isDirectory()) {
+			mCurrentPath = d.getAbsolutePath();
 
 			// refresh list files
 			mInRootFolder = false;
@@ -101,38 +99,40 @@ public class LocalFileManager extends AbstractFileManager {
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doDeleteFiles(java.util.List)
+	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doDeleteFiles(net.abachar.androftp.filelist.manager.FileEntry[])
 	 */
 	@Override
-	protected void doDeleteFiles(List<FileEntry> files) throws FileManagerException {
-
-		for (FileEntry fileEntry : files) {
-			File file = new File(fileEntry.getAbsolutePath());
-			if (!file.delete()) {
-				Toast.makeText(mContext, R.string.err_delete_file, Toast.LENGTH_SHORT).show();
+	protected void doDeleteFiles(FileEntry[] files) throws FileManagerException {
+		for (FileEntry file : files) {
+			File f = new File(file.getAbsolutePath());
+			if (!f.delete()) {
+				// Toast.makeText(mContext, R.string.err_delete_file,
+				// Toast.LENGTH_SHORT).show(); Exception
 			}
 		}
-		
+
 		// Refresh file list
 		loadFiles();
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doCreateNewfolder(java.lang.String)
+	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doCreateNewfolder(net.abachar.androftp.filelist.manager.FileEntry)
 	 */
 	@Override
-	protected void doCreateNewfolder(String name) throws FileManagerException {
-		String newFolder = mCurrentPath + File.separator + name;
+	protected void doCreateNewfolder(FileEntry dir) throws FileManagerException {
+		String newFolder = dir.getAbsolutePath();
 
 		File folder = new File(newFolder);
 		if (folder.exists()) {
-			Toast.makeText(mContext, R.string.err_folder_already_exists, Toast.LENGTH_SHORT).show();
+			// Toast.makeText(mContext, R.string.err_folder_already_exists,
+			// Toast.LENGTH_SHORT).show(); Exception
 		} else {
 			if (folder.mkdir()) {
 				// Refresh file list
 				loadFiles();
 			} else {
-				Toast.makeText(mContext, R.string.err_create_folder, Toast.LENGTH_SHORT).show();
+				// Toast.makeText(mContext, R.string.err_create_folder,
+				// Toast.LENGTH_SHORT).show(); Exception
 			}
 		}
 	}
@@ -147,23 +147,25 @@ public class LocalFileManager extends AbstractFileManager {
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doRenameFile(java.lang.String,
-	 *      java.lang.String)
+	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doRenameFile(net.abachar.androftp.filelist.manager.FileEntry,
+	 *      net.abachar.androftp.filelist.manager.FileEntry)
 	 */
 	@Override
-	protected void doRenameFile(String fileName, String newFileName) throws FileManagerException {
+	protected void doRenameFile(FileEntry file, FileEntry newFile) throws FileManagerException {
 
 		// New file
-		File newFile = new File(mCurrentPath + File.separator + newFileName);
-		if (newFile.exists()) {
-			Toast.makeText(mContext, R.string.err_file_already_exists, Toast.LENGTH_SHORT).show();
+		File nfile = new File(newFile.getAbsolutePath());
+		if (nfile.exists()) {
+			// Toast.makeText(mContext, R.string.err_file_already_exists,
+			// Toast.LENGTH_SHORT).show(); Exception
 		} else {
-			File oldFile = new File(mCurrentPath + File.separator + fileName);
-			if (oldFile.renameTo(newFile)) {
+			File oldFile = new File(file.getAbsolutePath());
+			if (oldFile.renameTo(nfile)) {
 				// Refresh file list
 				loadFiles();
 			} else {
-				Toast.makeText(mContext, R.string.err_rename_file, Toast.LENGTH_SHORT).show();
+				// Toast.makeText(mContext, R.string.err_rename_file,
+				// Toast.LENGTH_SHORT).show(); Exception
 			}
 		}
 	}

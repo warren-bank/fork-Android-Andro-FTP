@@ -1,17 +1,13 @@
 package net.abachar.androftp.filelist.manager;
 
+import java.io.File;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.os.Handler;
-import android.os.Message;
-import android.util.Log;
 
 /**
  * 
@@ -23,7 +19,7 @@ public abstract class AbstractFileManager implements FileManager {
 	protected Context mContext;
 
 	/** File manager listeners */
-	protected Map<FileManagerEvent, Set<FileManagerListener>> mListeners;
+	protected Set<FileManagerListener> mListeners;
 
 	/** Connection status */
 	protected boolean mConnected;
@@ -46,318 +42,12 @@ public abstract class AbstractFileManager implements FileManager {
 	 */
 	public AbstractFileManager(Context context) {
 		mContext = context;
-		mListeners = new HashMap<FileManagerEvent, Set<FileManagerListener>>();
+		mListeners = new HashSet<FileManagerListener>();
 		mConnected = false;
 		mInRootFolder = true;
 		mCurrentPath = null;
 		mOrderByComparator = new OrderByComparator(OrderBy.NAME);
 		mFileList = null;
-	}
-
-	/**
-	 * @see net.abachar.androftp.filelist.manager.FileManager#connect()
-	 */
-	@Override
-	public void connect() {
-		new BackgroundOperationTask(BackgroundOperation.CONNECT).execute("");
-	}
-
-	/**
-	 * Do work on second thread class
-	 */
-	private class BackgroundOperationTask extends AsyncTask<String, Void, String> {
-
-		/** Work type */
-		private BackgroundOperation mOperation;
-
-		/** */
-		public BackgroundOperationTask(BackgroundOperation operation) {
-			mOperation = operation;
-		}
-
-		/**
-		 * @see android.os.AsyncTask#onPreExecute()
-		 */
-		@Override
-		protected void onPreExecute() {
-			super.onPreExecute();
-
-			switch (mOperation) {
-
-				case CONNECT:
-					notifyListeners(FileManagerEvent.WILL_CONNECT);
-					break;
-			}
-		}
-
-		/**
-		 * @see android.os.AsyncTask#doInBackground(Params[])
-		 */
-		@Override
-		protected String doInBackground(String... params) {
-
-			try {
-				switch (mOperation) {
-
-					case CONNECT:
-						doConnect();
-						break;
-				}
-			} catch (ConnectionException ex) {
-
-			} catch (FileManagerException ex) {
-
-			}
-			return null;
-		}
-
-		/**
-		 * @see android.os.AsyncTask#onProgressUpdate(Progress[])
-		 */
-		@Override
-		protected void onProgressUpdate(Void... values) {
-			super.onProgressUpdate(values);
-		}
-
-		/**
-		 * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
-		 */
-		@Override
-		protected void onPostExecute(String result) {
-			super.onPostExecute(result);
-
-			switch (mOperation) {
-
-				case CONNECT:
-					mConnected = false; // true;
-
-					notifyListeners(FileManagerEvent.ERROR_CONNECTION);
-					// notifyListeners(FileManagerEvent.INITIAL_LIST_FILES);
-					// notifyListeners(FileManagerEvent.DID_CONNECT);
-					break;
-			}
-		}
-	}
-
-	/**
-	 * @see net.abachar.androftp.filelist.manager.FileManager#changeToParentDirectory()
-	 */
-	@Override
-	public void changeToParentDirectory() {
-
-		// Can we go to parent folder
-		if (!mInRootFolder) {
-			/** Excute a command asynchronously */
-			execAsyncCommand(FileManagerEvent.WILL_LOAD_LIST_FILES, FileManagerEvent.DID_LOAD_LIST_FILES, new AsyncCommand() {
-				public boolean execute() {
-
-					try {
-						doChangeToParentDirectory();
-						return true;
-					} catch (FileManagerException ex) {
-						Log.e("AFM", "changeToParentDirectory exception", ex);
-						// Send error connexion and skip end message
-						notifyListeners(FileManagerEvent.LOST_CONNECTION);
-						return false;
-					}
-				}
-			});
-		}
-	}
-
-	/**
-	 * @see net.abachar.androftp.filelist.manager.FileManager#changeWorkingDirectory(java.util.String)
-	 */
-	@Override
-	public void changeWorkingDirectory(final String dirname) {
-
-		/** Excute a command asynchronously */
-		execAsyncCommand(FileManagerEvent.WILL_LOAD_LIST_FILES, FileManagerEvent.DID_LOAD_LIST_FILES, new AsyncCommand() {
-			public boolean execute() {
-
-				try {
-					doChangeWorkingDirectory(dirname);
-					return true;
-				} catch (FileManagerException ex) {
-					Log.e("AFM", "changeWorkingDirectory exception", ex);
-					// Send error connexion and skip end message
-					notifyListeners(FileManagerEvent.LOST_CONNECTION);
-					return false;
-				}
-			}
-		});
-	}
-
-	/**
-	 * 
-	 */
-	public void changeOrderBy(final OrderBy orderBy) {
-
-		// Update order by
-		mOrderByComparator.orderBy = orderBy;
-
-		// Re-order files if needed
-		if ((mFileList != null) && !mFileList.isEmpty()) {
-
-			/** Excute a command asynchronously */
-			execAsyncCommand(FileManagerEvent.WILL_LOAD_LIST_FILES, FileManagerEvent.DID_LOAD_LIST_FILES, new AsyncCommand() {
-				public boolean execute() {
-					Collections.sort(mFileList, mOrderByComparator);
-					return true;
-				}
-			});
-		}
-	}
-
-	/**
-	 * @see net.abachar.androftp.filelist.manager.FileManager#deleteFiles(java.util.List)
-	 */
-	@Override
-	public void deleteFiles(final List<FileEntry> files) {
-
-		/** Excute a command asynchronously */
-		execAsyncCommand(FileManagerEvent.WILL_LOAD_LIST_FILES, FileManagerEvent.DID_LOAD_LIST_FILES, new AsyncCommand() {
-			public boolean execute() {
-
-				try {
-					doDeleteFiles(files);
-					return true;
-				} catch (FileManagerException ex) {
-					Log.e("AFM", "refresh exception", ex);
-					// Send error connexion and skip end message
-					notifyListeners(FileManagerEvent.LOST_CONNECTION);
-					return false;
-				}
-			}
-		});
-	}
-
-	/**
-	 * @see net.abachar.androftp.filelist.manager.FileManager#createNewfolder(java.lang.String)
-	 */
-	@Override
-	public void createNewfolder(final String name) {
-
-		/** Excute a command asynchronously */
-		execAsyncCommand(FileManagerEvent.WILL_LOAD_LIST_FILES, FileManagerEvent.DID_LOAD_LIST_FILES, new AsyncCommand() {
-			public boolean execute() {
-
-				try {
-					doCreateNewfolder(name);
-					return true;
-				} catch (FileManagerException ex) {
-					Log.e("AFM", "refresh exception", ex);
-					// Send error connexion and skip end message
-					notifyListeners(FileManagerEvent.LOST_CONNECTION);
-					return false;
-				}
-			}
-		});
-	}
-
-	/**
-	 * @see net.abachar.androftp.filelist.manager.FileManager#renameFile(java.lang.String,
-	 *      java.lang.String)
-	 */
-	@Override
-	public void renameFile(final String fileName, final String newFileName) {
-
-		/** Excute a command asynchronously */
-		execAsyncCommand(FileManagerEvent.WILL_LOAD_LIST_FILES, FileManagerEvent.DID_LOAD_LIST_FILES, new AsyncCommand() {
-			public boolean execute() {
-
-				try {
-					doRenameFile(fileName, newFileName);
-					return true;
-				} catch (FileManagerException ex) {
-					Log.e("AFM", "refresh exception", ex);
-					// Send error connexion and skip end message
-					notifyListeners(FileManagerEvent.LOST_CONNECTION);
-					return false;
-				}
-			}
-		});
-	}
-
-	/**
-	 * @see net.abachar.androftp.filelist.manager.FileManager#refresh()
-	 */
-	@Override
-	public void refresh() {
-
-		/** Excute a command asynchronously */
-		execAsyncCommand(FileManagerEvent.WILL_LOAD_LIST_FILES, FileManagerEvent.DID_LOAD_LIST_FILES, new AsyncCommand() {
-			public boolean execute() {
-
-				try {
-					doRefresh();
-					return true;
-				} catch (FileManagerException ex) {
-					Log.e("AFM", "refresh exception", ex);
-					// Send error connexion and skip end message
-					notifyListeners(FileManagerEvent.LOST_CONNECTION);
-					return false;
-				}
-			}
-		});
-	}
-
-	/**
-	 * 
-	 */
-	protected abstract void doConnect() throws FileManagerException;
-
-	/**
-	 * 
-	 */
-	protected abstract void doChangeToParentDirectory() throws FileManagerException;
-
-	/**
-	 * 
-	 */
-	protected abstract void doChangeWorkingDirectory(String dirname) throws FileManagerException;
-
-	/**
-	 * 
-	 */
-	protected abstract void doRefresh() throws FileManagerException;
-
-	/**
-	 * 
-	 */
-	protected abstract void doDeleteFiles(List<FileEntry> files) throws FileManagerException;
-
-	/**
-	 * 
-	 */
-	protected abstract void doCreateNewfolder(String name) throws FileManagerException;
-
-	/**
-	 * 
-	 */
-	protected abstract void doRenameFile(String fileName, String newFileName) throws FileManagerException;
-
-	/**
-	 * 
-	 */
-	public void addFileManagerListener(FileManagerListener listener, FileManagerEvent... events) {
-
-		for (FileManagerEvent event : events) {
-
-			if (!mListeners.containsKey(event)) {
-				mListeners.put(event, new HashSet<FileManagerListener>());
-			}
-
-			Set<FileManagerListener> l = mListeners.get(event);
-			if (!l.contains(listener)) {
-				l.add(listener);
-
-				// Notify new added listner
-				if (event.equals(FileManagerEvent.INITIAL_LIST_FILES)) {
-					listener.onFileManagerEvent(this, FileManagerEvent.INITIAL_LIST_FILES);
-				}
-			}
-		}
 	}
 
 	/**
@@ -393,71 +83,295 @@ public abstract class AbstractFileManager implements FileManager {
 	}
 
 	/**
-	 * Asynchronous command callback
+	 * @see net.abachar.androftp.filelist.manager.FileManager#addListener(net.abachar.androftp.filelist.manager.FileManagerListener)
 	 */
-	protected static interface AsyncCommand {
-
-		/**
-		 * @return true if command executed successfully
-		 */
-		public boolean execute();
-	}
-
-	/**
-	 * 
-	 * @param beginMsg
-	 * @param endMsg
-	 * @param asyncCommand
-	 */
-	protected void execAsyncCommand(final FileManagerEvent beginMsg, final FileManagerEvent endMsg, final AsyncCommand asyncCommand) {
-
-		// Load list files in separate thread
-		new Thread(new Runnable() {
-			public void run() {
-
-				// Send begin message
-				if (beginMsg != null) {
-					notifyListeners(beginMsg);
-				}
-
-				// Execute the command
-				if (asyncCommand.execute()) {
-
-					// Send end message
-					if (endMsg != null) {
-						notifyListeners(endMsg);
-					}
-				}
-			}
-		}).start();
+	@Override
+	public void addListener(FileManagerListener listener) {
+		if (!mListeners.contains(listener)) {
+			mListeners.add(listener);
+		}
 	}
 
 	/**
 	 * 
 	 * @param fmm
 	 */
-	protected void notifyListeners(FileManagerEvent fileManagerMessage) {
+	protected void notifyListeners(FileManagerEvent event) {
 		if (!mListeners.isEmpty()) {
-			Message msg = handler.obtainMessage();
-			msg.what = fileManagerMessage.ordinal();
-			msg.obj = this;
-			handler.sendMessage(msg);
+			for (FileManagerListener listener : mListeners) {
+				listener.onFileManagerEvent(this, event);
+			}
+		}
+	}
+
+	/**
+	 * 
+	 * @param fmm
+	 */
+	protected void notifyListeners(List<FileManagerEvent> events) {
+		for (FileManagerEvent event : events) {
+			notifyListeners(event);
+		}
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.manager.FileManager#connect()
+	 */
+	@Override
+	public void connect() {
+		new BackgroundOperationTask(BackgroundOperation.CONNECT).execute();
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.manager.FileManager#changeToParentDirectory()
+	 */
+	@Override
+	public void changeToParentDirectory() {
+		// Can we go to parent folder
+		if (!mInRootFolder) {
+			new BackgroundOperationTask(BackgroundOperation.CHANGE_TO_PARENT_DIRECTORY).execute();
+		}
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.manager.FileManager#changeWorkingDirectory(java.util.String)
+	 */
+	@Override
+	public void changeWorkingDirectory(final String dirname) {
+		FileEntry dir = null;
+		for (FileEntry fileEntry : mFileList) {
+			if (dirname.equals(fileEntry.getName())) {
+				dir = fileEntry;
+				break;
+			}
+		}
+
+		new BackgroundOperationTask(BackgroundOperation.CHANGE_WORKING_DIRECTORY).execute(dir);
+	}
+
+	/**
+	 * 
+	 */
+	public void changeOrderBy(final OrderBy orderBy) {
+
+		// Update order by
+		mOrderByComparator.orderBy = orderBy;
+
+		// Re-order files if needed
+		if ((mFileList != null) && !mFileList.isEmpty()) {
+			new BackgroundOperationTask(BackgroundOperation.CHANGE_ORDER_BY).execute();
+		}
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.manager.FileManager#deleteFiles(java.util.List)
+	 */
+	@Override
+	public void deleteFiles(final List<FileEntry> files) {
+
+		FileEntry[] aFiles = new FileEntry[files.size()];
+		files.toArray(aFiles);
+
+		new BackgroundOperationTask(BackgroundOperation.DELETE_FILES).execute(aFiles);
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.manager.FileManager#createNewfolder(java.lang.String)
+	 */
+	@Override
+	public void createNewfolder(final String dirname) {
+
+		// Check if file already existe
+		if ((mFileList != null) && !mFileList.isEmpty()) {
+			String d = dirname.toLowerCase();
+			for (FileEntry fileEntry : mFileList) {
+				if (d.equals(fileEntry.getName().toLowerCase())) {
+					// R.string.err_file_already_exists, Exception
+				}
+			}
+		}
+
+		FileEntry dir = new FileEntry(dirname);
+		dir.setAbsolutePath(mCurrentPath + File.separator + dirname);
+		new BackgroundOperationTask(BackgroundOperation.CREATE_NEW_FOLDER).execute(dir);
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.manager.FileManager#renameFile(java.lang.String,
+	 *      java.lang.String)
+	 */
+	@Override
+	public void renameFile(final String fileName, final String newFileName) {
+
+		String newFileNameLowerCase = newFileName.toLowerCase();
+		boolean isSameName = newFileNameLowerCase.equals(fileName.toLowerCase());
+
+		// Old file aheck if a file with the same name already existe
+		FileEntry file = null;
+		for (FileEntry fileEntry : mFileList) {
+
+			if ((file == null) && fileName.equals(fileEntry.getName())) {
+				file = fileEntry;
+			}
+
+			if (!isSameName) {
+				if (newFileNameLowerCase.equals(fileEntry.getName().toLowerCase())) {
+					// R.string.err_file_already_exists, Exception
+				}
+			}
+		}
+
+		// New file
+		FileEntry newFile = new FileEntry(newFileName);
+		newFile.setAbsolutePath(mCurrentPath + File.separator + newFileName);
+
+		new BackgroundOperationTask(BackgroundOperation.RENAME_FILE).execute(file, newFile);
+	}
+
+	/**
+	 * @see net.abachar.androftp.filelist.manager.FileManager#refresh()
+	 */
+	@Override
+	public void refresh() {
+		new BackgroundOperationTask(BackgroundOperation.REFRESH).execute();
+	}
+
+	/**
+	 * Do work on second thread class
+	 */
+	private class BackgroundOperationTask extends AsyncTask<FileEntry, Void, BackgroundOperationResult> {
+
+		/** Work type */
+		private BackgroundOperation mOperation;
+
+		/** */
+		public BackgroundOperationTask(BackgroundOperation operation) {
+			mOperation = operation;
+		}
+
+		/**
+		 * @see android.os.AsyncTask#onPreExecute()
+		 */
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+
+			// Send begin events
+			notifyListeners(mOperation.getBeginEvents());
+		}
+
+		/**
+		 * @see android.os.AsyncTask#doInBackground(Params[])
+		 */
+		@Override
+		protected BackgroundOperationResult doInBackground(FileEntry... params) {
+			BackgroundOperationResult result = new BackgroundOperationResult();
+
+			try {
+				switch (mOperation.getId()) {
+
+					case BackgroundOperation.CONNECT_ID:
+						doConnect();
+						break;
+
+					case BackgroundOperation.CHANGE_TO_PARENT_DIRECTORY_ID:
+						doChangeToParentDirectory();
+						break;
+
+					case BackgroundOperation.CHANGE_WORKING_DIRECTORY_ID:
+						doChangeWorkingDirectory(params[0]);
+						break;
+
+					case BackgroundOperation.CHANGE_ORDER_BY_ID:
+						Collections.sort(mFileList, mOrderByComparator);
+						break;
+
+					case BackgroundOperation.DELETE_FILES_ID:
+						doDeleteFiles(params);
+						break;
+
+					case BackgroundOperation.CREATE_NEW_FOLDER_ID:
+						doCreateNewfolder(params[0]);
+						break;
+
+					case BackgroundOperation.RENAME_FILE_ID:
+						doRenameFile(params[0], params[1]);
+						break;
+
+					case BackgroundOperation.REFRESH_ID:
+						doRefresh();
+						break;
+				}
+
+				result.setSuccess(true);
+			} catch (ConnectionException ex) {
+				result.setSuccess(false);
+				result.addReplacementEvent(FileManagerEvent.ERROR_CONNECTION);
+
+			} catch (FileManagerException ex) {
+				result.setSuccess(false);
+			}
+			return result;
+		}
+
+		/**
+		 * @see android.os.AsyncTask#onProgressUpdate(Progress[])
+		 */
+		@Override
+		protected void onProgressUpdate(Void... values) {
+			super.onProgressUpdate(values);
+		}
+
+		/**
+		 * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
+		 */
+		@Override
+		protected void onPostExecute(BackgroundOperationResult result) {
+			super.onPostExecute(result);
+
+			if (result.isSuccess()) {
+				// Send normal end events
+				notifyListeners(mOperation.getEndEvents());
+			} else {
+				if (!result.getReplacementEvents().isEmpty()) {
+					notifyListeners(result.getReplacementEvents());
+				}
+			}
 		}
 	}
 
 	/**
 	 * 
 	 */
-	final Handler handler = new Handler() {
-		public void handleMessage(Message msg) {
-			FileManagerEvent fmm = FileManagerEvent.values()[msg.what];
+	protected abstract void doConnect() throws FileManagerException;
 
-			if (mListeners.containsKey(fmm)) {
-				Set<FileManagerListener> l = mListeners.get(fmm);
-				for (FileManagerListener listener : l) {
-					listener.onFileManagerEvent((FileManager) msg.obj, fmm);
-				}
-			}
-		}
-	};
+	/**
+	 * 
+	 */
+	protected abstract void doChangeToParentDirectory() throws FileManagerException;
+
+	/**
+	 * 
+	 */
+	protected abstract void doChangeWorkingDirectory(FileEntry dir) throws FileManagerException;
+
+	/**
+	 * 
+	 */
+	protected abstract void doRefresh() throws FileManagerException;
+
+	/**
+	 * 
+	 */
+	protected abstract void doDeleteFiles(FileEntry[] files) throws FileManagerException;
+
+	/**
+	 * 
+	 */
+	protected abstract void doCreateNewfolder(FileEntry dir) throws FileManagerException;
+
+	/**
+	 * 
+	 */
+	protected abstract void doRenameFile(FileEntry file, FileEntry newFile) throws FileManagerException;
 }
