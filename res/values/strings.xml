@@ -2,6 +2,7 @@
 <resources>
 
     <string name="app_name">Andro FTP HD</string>
+    <string name="app_settings_name">Settings</string>
     <string name="loading">Loading…</string>
 
     <!-- Connect progress dialog -->
@@ -54,6 +55,7 @@
     <string name="menu_detail">Detail</string>
     <string name="menu_cancel">Cancel</string>
     <string name="menu_clear">Clear</string>
+    <string name="menu_settings">Settings</string>
     <!-- Transfer fragment -->
     <string name="transfer_label_source">Source</string>
     <string name="transfer_label_destination">Destination</string>
@@ -78,13 +80,5 @@
     <!--  -->
     <string name="file_icon_content_description">File icon</string>
     <string name="go_parent_content_description">Go parent</string>
-
-    <!-- String arrays -->
-    <string-array name="order_by_list">
-        <item>Name</item>
-        <item>Type</item>
-        <item>Time</item>
-        <item>Size</item>
-    </string-array>
 
 </resources>

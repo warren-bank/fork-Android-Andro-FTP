@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--  -->
+    <string-array name="order_by_list">
+        <item>Name</item>
+        <item>Type</item>
+        <item>Time</item>
+        <item>Size</item>
+    </string-array>
+
+    <!--  -->
+    <string-array name="pref_transfer_mode_entries">
+        <item>Passive (recommended)</item>
+        <item>Active</item>
+    </string-array>
+    <string-array name="pref_transfer_mode_values">
+        <item>P</item>
+        <item>A</item>
+    </string-array>
+
+</resources>

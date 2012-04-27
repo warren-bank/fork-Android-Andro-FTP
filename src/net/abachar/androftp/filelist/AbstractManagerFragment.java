@@ -198,7 +198,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 		mRefreshMenu.setIcon(R.drawable.ic_action_refresh);
 		mRefreshMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 
-		// Refresh & New folder
+		// New folder
 		mNewfolderMenu = menu.add(R.string.menu_newfolder);
 		mNewfolderMenu.setIcon(R.drawable.ic_action_newfolder);
 		mNewfolderMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);

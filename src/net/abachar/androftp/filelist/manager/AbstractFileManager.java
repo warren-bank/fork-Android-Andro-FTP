@@ -89,6 +89,9 @@ public abstract class AbstractFileManager implements FileManager {
 	public void addListener(FileManagerListener listener) {
 		if (!mListeners.contains(listener)) {
 			mListeners.add(listener);
+
+			// Notify new added listner
+			listener.onFileManagerEvent(this, FileManagerEvent.INITIAL_LIST_FILES);
 		}
 	}
 

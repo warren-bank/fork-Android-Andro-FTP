@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory android:title="Connection" >
+        <EditTextPreference
+            android:defaultValue="20"
+            android:title=" Timeout in seconds" />
+        <EditTextPreference
+            android:defaultValue="2"
+            android:title="Maximum number of retries" />
+        <EditTextPreference
+            android:defaultValue="5"
+            android:title="Delay between failed login attempts" />
+
+        <ListPreference android:title="Transfer mode" android:entryValues="@array/pref_transfer_mode_values" android:entries="@array/pref_transfer_mode_entries"/>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Transfers" >
+        <EditTextPreference
+            android:defaultValue="2"
+            android:summary="1-10"
+            android:title="Maximum simultaneous transfers" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

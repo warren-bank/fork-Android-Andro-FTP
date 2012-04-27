@@ -1,12 +1,11 @@
 package net.abachar.androftp;
 
-import net.abachar.androftp.R;
 import net.abachar.androftp.filelist.LocalManagerFragment;
 import net.abachar.androftp.filelist.ServerManagerFragment;
 import net.abachar.androftp.filelist.manager.FTPFileManager;
 import net.abachar.androftp.filelist.manager.FileManager;
-import net.abachar.androftp.filelist.manager.FileManagerListener;
 import net.abachar.androftp.filelist.manager.FileManagerEvent;
+import net.abachar.androftp.filelist.manager.FileManagerListener;
 import net.abachar.androftp.filelist.manager.LocalFileManager;
 import net.abachar.androftp.servers.Logontype;
 import net.abachar.androftp.transfers.TransferFragment;
@@ -18,7 +17,10 @@ import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 
 /**
  * 
@@ -36,6 +38,9 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 
 	/** Connexion progress dialog */
 	private ProgressDialog mProgressDialog;
+
+	/** Menus */
+	protected MenuItem mSettingMenu;
 
 	/**
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
@@ -186,6 +191,32 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 				new AlertDialog.Builder(this).setMessage("Connexion perdu :(").setCancelable(true).setNeutralButton("Close", null).create().show();
 				break;
 		}
+	}
+
+	/**
+	 * @see android.app.Fragment#onCreateOptionsMenu(android.view.Menu,
+	 *      android.view.MenuInflater)
+	 */
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		mSettingMenu = menu.add(0, 0, 10, R.string.menu_settings);
+		mSettingMenu.setIcon(R.drawable.ic_action_settings);
+		mSettingMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+		return true;
+	}
+
+	/**
+	 * @see android.app.Fragment#onOptionsItemSelected(android.view.MenuItem)
+	 */
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+
+		if (mSettingMenu == item) {
+			startActivityForResult(new Intent(this, AndroFTPPreferenceActivity.class), 1);
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
