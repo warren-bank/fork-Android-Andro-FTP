@@ -1,7 +1,14 @@
 package net.abachar.androftp.transfers.manager;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
+import net.abachar.androftp.filelist.manager.FileManagerListener;
+import net.abachar.androftp.filelist.manager.OrderBy;
+import net.abachar.androftp.filelist.manager.OrderByComparator;
+
+import android.content.Context;
 import android.os.AsyncTask;
 
 /**
@@ -10,8 +17,19 @@ import android.os.AsyncTask;
  */
 public class TransferManager {
 
+	/** Context */
+	private Context mContext;
+
 	/** List of all active transfers */
 	private List<Transfer> mTransferList;
+
+	/**
+	 * Default constructor
+	 */
+	public TransferManager(Context context) {
+		mContext = context;
+		mTransferList = new ArrayList<Transfer>();
+	}
 
 	/**
 	 * 

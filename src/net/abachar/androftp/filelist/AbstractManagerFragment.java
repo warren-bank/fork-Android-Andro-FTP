@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.abachar.androftp.MainActivity;
+import net.abachar.androftp.MainApplication;
 import net.abachar.androftp.R;
 import net.abachar.androftp.filelist.manager.FileEntry;
 import net.abachar.androftp.filelist.manager.FileManager;
@@ -117,7 +117,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 		mSmallBrowserFileManager.addListener(this);
 
 		// Transfer manager
-		mTransferManager = ((MainActivity) getActivity()).getTransferManager();
+		mTransferManager = MainApplication.getInstance().getTransferManager();
 
 		// Return created view
 		return view;

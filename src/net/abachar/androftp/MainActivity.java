@@ -2,14 +2,11 @@ package net.abachar.androftp;
 
 import net.abachar.androftp.filelist.LocalManagerFragment;
 import net.abachar.androftp.filelist.ServerManagerFragment;
-import net.abachar.androftp.filelist.manager.FTPFileManager;
 import net.abachar.androftp.filelist.manager.FileManager;
 import net.abachar.androftp.filelist.manager.FileManagerEvent;
 import net.abachar.androftp.filelist.manager.FileManagerListener;
-import net.abachar.androftp.filelist.manager.LocalFileManager;
 import net.abachar.androftp.servers.Logontype;
 import net.abachar.androftp.transfers.TransferFragment;
-import net.abachar.androftp.transfers.manager.TransferManager;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.Activity;
@@ -30,11 +27,6 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 
 	/** Tab indexs and selected tab index */
 	private TabId mSelectedTab;
-
-	/** Manages */
-	private FileManager mLocalFileManager;
-	private FileManager mServerFileManager;
-	private TransferManager mTransferManager;
 
 	/** Connexion progress dialog */
 	private ProgressDialog mProgressDialog;
@@ -74,17 +66,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 		}
 
 		// Instanciate managers
-		mTransferManager = new TransferManager();
-		mLocalFileManager = new LocalFileManager(this);
-		mServerFileManager = new FTPFileManager(this);
-
-		// Listener
-		mLocalFileManager.addListener(this);
-		mServerFileManager.addListener(this);
-
-		// Init file managers
-		mLocalFileManager.init(bundle);
-		mServerFileManager.init(bundle);
+		MainApplication.getInstance().initManagers(this, bundle);
 
 		// Use main view
 		setContentView(R.layout.main);
@@ -93,8 +75,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 		setupActionBar();
 
 		// Connect file managers
-		mLocalFileManager.connect();
-		mServerFileManager.connect();
+		MainApplication.getInstance().connect();
 	}
 
 	/**
@@ -178,7 +159,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 				break;
 
 			case DID_CONNECT:
-				if (mLocalFileManager.isConnected() && mServerFileManager.isConnected()) {
+				if (MainApplication.getInstance().isAllConnected()) {
 					mProgressDialog.dismiss();
 				}
 				break;
@@ -217,27 +198,6 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 		}
 
 		return false;
-	}
-
-	/**
-	 * @return the localFileManager
-	 */
-	public FileManager getLocalFileManager() {
-		return mLocalFileManager;
-	}
-
-	/**
-	 * @return the serverFileManager
-	 */
-	public FileManager getServerFileManager() {
-		return mServerFileManager;
-	}
-
-	/**
-	 * @return the mTransferManager
-	 */
-	public TransferManager getTransferManager() {
-		return mTransferManager;
 	}
 
 	/**

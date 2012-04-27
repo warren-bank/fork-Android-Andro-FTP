@@ -3,7 +3,7 @@ package net.abachar.androftp.filelist;
 import java.io.File;
 import java.util.List;
 
-import net.abachar.androftp.MainActivity;
+import net.abachar.androftp.MainApplication;
 import net.abachar.androftp.R;
 import net.abachar.androftp.filelist.manager.FileEntry;
 import net.abachar.androftp.transfers.manager.Transfer;
@@ -38,8 +38,8 @@ public class ServerManagerFragment extends AbstractManagerFragment {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
 		// Init file managers
-		mWideBrowserFileManager = ((MainActivity) getActivity()).getServerFileManager();
-		mSmallBrowserFileManager = ((MainActivity) getActivity()).getLocalFileManager();
+		mWideBrowserFileManager = MainApplication.getInstance().getServerFileManager();
+		mSmallBrowserFileManager = MainApplication.getInstance().getLocalFileManager();
 
 		// Create view
 		return super.onCreateView(inflater, container, savedInstanceState);
