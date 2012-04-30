@@ -195,7 +195,12 @@ public abstract class AbstractFileManager implements FileManager {
 		}
 
 		FileEntry dir = new FileEntry(dirname);
-		dir.setAbsolutePath(mCurrentPath + File.separator + dirname);
+		if (mCurrentPath.endsWith(File.separator)) {
+			dir.setAbsolutePath(mCurrentPath + dirname);
+		} else {
+			dir.setAbsolutePath(mCurrentPath + File.separator + dirname);
+		}
+
 		new BackgroundOperationTask(BackgroundOperation.CREATE_NEW_FOLDER).execute(dir);
 	}
 
@@ -226,7 +231,11 @@ public abstract class AbstractFileManager implements FileManager {
 
 		// New file
 		FileEntry newFile = new FileEntry(newFileName);
-		newFile.setAbsolutePath(mCurrentPath + File.separator + newFileName);
+		if (mCurrentPath.endsWith(File.separator)) {
+			newFile.setAbsolutePath(mCurrentPath + newFileName);
+		} else {
+			newFile.setAbsolutePath(mCurrentPath + File.separator + newFileName);
+		}
 
 		new BackgroundOperationTask(BackgroundOperation.RENAME_FILE).execute(file, newFile);
 	}

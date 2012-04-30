@@ -676,6 +676,7 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	 */
 	protected boolean onPrepareActionMode(Menu menu) {
 
+		// Enable/disable detail and rename actions
 		if (mMultiSelect) {
 			if (mRenameMenu.isEnabled()) {
 				mRenameMenu.setIcon(R.drawable.ic_action_rename_off);

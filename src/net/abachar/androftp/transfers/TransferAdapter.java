@@ -134,22 +134,6 @@ public class TransferAdapter extends BaseAdapter implements ListAdapter, OnClick
 
 	/**
 	 * 
-	 * @param transfer
-	 */
-	public void addTransfer(Transfer transfer) {
-		if (mTransferList == null) {
-			mTransferList = new ArrayList<Transfer>();
-		}
-
-		// Add item
-		mTransferList.add(transfer);
-
-		// Refresh view
-		notifyDataSetChanged();
-	}
-
-	/**
-	 * 
 	 * @param selectAllChecked
 	 */
 	public void updateSelectAllTransfers(boolean isChecked) {
@@ -180,7 +164,7 @@ public class TransferAdapter extends BaseAdapter implements ListAdapter, OnClick
 		if (mTransferList.isEmpty()) {
 			mTransferList = null;
 		}
-		
+
 		// Refresh view
 		notifyDataSetChanged();
 	}
@@ -200,6 +184,21 @@ public class TransferAdapter extends BaseAdapter implements ListAdapter, OnClick
 		}
 
 		return count;
+	}
+
+	/**
+	 * @param mTransferList
+	 *            the mTransferList to set
+	 */
+	public void setTransferList(List<Transfer> transferList) {
+
+		if ((transferList != null) && !transferList.isEmpty()) {
+			mTransferList = transferList;
+		} else {
+			mTransferList = null;
+		}
+		notifyDataSetChanged();
+
 	}
 
 	/**

@@ -1,12 +1,10 @@
 package net.abachar.androftp.filelist;
 
-import java.io.File;
 import java.util.List;
 
 import net.abachar.androftp.MainApplication;
 import net.abachar.androftp.R;
 import net.abachar.androftp.filelist.manager.FileEntry;
-import net.abachar.androftp.transfers.manager.Transfer;
 import net.abachar.androftp.transfers.manager.TransferDirection;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -60,24 +58,49 @@ public class ServerManagerFragment extends AbstractManagerFragment {
 	}
 
 	/**
+	 * 
+	 * @param menu
+	 * @return
+	 */
+	protected boolean onPrepareActionMode(Menu menu) {
+
+		// Enable/disable upload/download actions
+		boolean isFolderSelected = false;
+		List<FileEntry> files = mWideBrowserFileAdapter.getSelectedFiles();
+		if ((files != null) && !files.isEmpty()) {
+			for (FileEntry file : files) {
+				if (file.isFolder()) {
+					isFolderSelected = true;
+					break;
+				}
+			}
+		}
+
+		if (isFolderSelected) {
+			// mDownloadMenu.setIcon(R.drawable.ic_action_download_off);
+			mDownloadMenu.setEnabled(false);
+		} else {
+			mDownloadMenu.setIcon(R.drawable.ic_action_download);
+			mDownloadMenu.setEnabled(true);
+		}
+
+		return super.onPrepareActionMode(menu);
+	}
+
+	/**
 	 * @see net.abachar.androftp.filelist.AbstractManagerFragment#onMenuTransfer()
 	 */
 	@Override
 	protected void onMenuTransfer() {
 
+		// Add files to queue
 		List<FileEntry> selectedFiles = mWideBrowserFileAdapter.getSelectedFiles();
 		for (FileEntry file : selectedFiles) {
-
-			Transfer transfer = new Transfer();
-			transfer.setNewTransfer(true);
-			transfer.setDirection(TransferDirection.DOWNLOAD);
-			transfer.setSourcePath(file.getAbsolutePath());
-			transfer.setDestinationPath(mSmallBrowserFileManager.getCurrentPath() + File.separator + file.getName());
-			transfer.setFileSize(file.getSize());
-			transfer.setProgress(0);
-
-			mTransferManager.addTransfer(transfer);
+			mTransferManager.addToTransferQueue(TransferDirection.DOWNLOAD, file);
 		}
+
+		// process queue
+		mTransferManager.processTransferQueue();
 
 		mActionMode.finish();
 	}

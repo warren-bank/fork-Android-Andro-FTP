@@ -16,10 +16,15 @@ public class Transfer {
 	private TransferDirection direction;
 
 	/** */
+	private String name;
+
+	/** */
 	private String sourcePath;
+	private String sourceAbsolutePath;
 
 	/** */
 	private String destinationPath;
+	private String destinationAbsolutePath;
 
 	/** */
 	private long fileSize;
@@ -73,6 +78,21 @@ public class Transfer {
 	}
 
 	/**
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * @param name
+	 *            the name to set
+	 */
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	/**
 	 * @return the sourcePath
 	 */
 	public String getSourcePath() {
@@ -88,6 +108,21 @@ public class Transfer {
 	}
 
 	/**
+	 * @return the sourceAbsolutePath
+	 */
+	public String getSourceAbsolutePath() {
+		return sourceAbsolutePath;
+	}
+
+	/**
+	 * @param sourceAbsolutePath
+	 *            the sourceAbsolutePath to set
+	 */
+	public void setSourceAbsolutePath(String sourceAbsolutePath) {
+		this.sourceAbsolutePath = sourceAbsolutePath;
+	}
+
+	/**
 	 * @return the destinationPath
 	 */
 	public String getDestinationPath() {
@@ -100,6 +135,21 @@ public class Transfer {
 	 */
 	public void setDestinationPath(String destinationPath) {
 		this.destinationPath = destinationPath;
+	}
+
+	/**
+	 * @return the destinationAbsolutePath
+	 */
+	public String getDestinationAbsolutePath() {
+		return destinationAbsolutePath;
+	}
+
+	/**
+	 * @param destinationAbsolutePath
+	 *            the destinationAbsolutePath to set
+	 */
+	public void setDestinationAbsolutePath(String destinationAbsolutePath) {
+		this.destinationAbsolutePath = destinationAbsolutePath;
 	}
 
 	/**

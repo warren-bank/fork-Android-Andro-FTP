@@ -1,6 +1,9 @@
 package net.abachar.androftp.transfers;
 
+import net.abachar.androftp.MainApplication;
 import net.abachar.androftp.R;
+import net.abachar.androftp.transfers.manager.TransferListener;
+import net.abachar.androftp.transfers.manager.TransferManager;
 import android.app.Fragment;
 import android.os.Bundle;
 import android.view.ActionMode;
@@ -17,10 +20,13 @@ import android.widget.ListView;
  * 
  * @author abachar
  */
-public class TransferFragment extends Fragment implements OnClickListener {
+public class TransferFragment extends Fragment implements OnClickListener, TransferListener {
 
 	/**  */
 	private ActionMode mActionMode;
+
+	/** Managers */
+	protected TransferManager mTransferManager;
 
 	/** Window items */
 	private CheckBox mSelectAllCheckBox;
@@ -39,6 +45,10 @@ public class TransferFragment extends Fragment implements OnClickListener {
 
 		// Initialize user interface
 		initTransferUI(view);
+
+		// Transfer manager
+		mTransferManager = MainApplication.getInstance().getTransferManager();
+		mTransferManager.setListener(this);
 
 		// Return created view
 		return view;
@@ -97,6 +107,14 @@ public class TransferFragment extends Fragment implements OnClickListener {
 				mActionMode.finish();
 			}
 		}
+	}
+
+	/**
+	 * @see net.abachar.androftp.transfers.manager.TransferListener#onUpdateTransfer()
+	 */
+	@Override
+	public void onUpdateTransfer() {
+		mTransferAdapter.setTransferList(mTransferManager.getTransferList());
 	}
 
 	/**

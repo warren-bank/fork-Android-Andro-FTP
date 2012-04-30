@@ -1,24 +1,24 @@
 package net.abachar.androftp.transfers.manager;
 
+import java.io.File;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
-import net.abachar.androftp.filelist.manager.FileManagerListener;
-import net.abachar.androftp.filelist.manager.OrderBy;
-import net.abachar.androftp.filelist.manager.OrderByComparator;
-
+import net.abachar.androftp.MainApplication;
+import net.abachar.androftp.filelist.manager.FileEntry;
 import android.content.Context;
-import android.os.AsyncTask;
 
 /**
  * 
  * @author abachar
  */
-public class TransferManager {
+public class TransferManager implements TransferTaskProgressListener {
 
 	/** Context */
-	private Context mContext;
+	// private Context mContext;
+
+	/** */
+	private TransferListener listener;
 
 	/** List of all active transfers */
 	private List<Transfer> mTransferList;
@@ -27,112 +27,98 @@ public class TransferManager {
 	 * Default constructor
 	 */
 	public TransferManager(Context context) {
-		mContext = context;
+		// mContext = context;
 		mTransferList = new ArrayList<Transfer>();
 	}
 
 	/**
 	 * 
-	 * @param transfer
+	 * @param direction
+	 * @param entry
 	 */
-	public void addTransfer(Transfer transfer) {
+	public void addToTransferQueue(TransferDirection direction, FileEntry entry) {
+
+		Transfer transfer = new Transfer();
+		transfer.setNewTransfer(true);
+		transfer.setName(entry.getName());
+		transfer.setDirection(direction);
+		transfer.setFileSize(entry.getSize());
+		transfer.setProgress(0);
+
+		// Source path
+		transfer.setSourcePath(entry.getParentPath());
+		transfer.setSourceAbsolutePath(entry.getAbsolutePath());
+
+		// Destination path
+		String destinationPath;
+		if (transfer.isUpload()) {
+			destinationPath = MainApplication.getInstance().getServerFileManager().getCurrentPath();
+		} else {
+			destinationPath = MainApplication.getInstance().getLocalFileManager().getCurrentPath();
+		}
+		transfer.setDestinationPath(destinationPath);
+
+		if (!destinationPath.endsWith(File.separator)) {
+			destinationPath = destinationPath + File.separator;
+		}
+		transfer.setDestinationAbsolutePath(destinationPath + entry.getName());
+
+		// Add transfer
 		mTransferList.add(transfer);
-		new BackgroundTransferTask(transfer).execute();
 	}
 
 	/**
-	 * Do work on second thread class
+	 * 
 	 */
-	private class BackgroundTransferTask extends AsyncTask<Void, Integer, String> {
+	public void processTransferQueue() {
 
-		/** */
-		private Transfer transfer;
+		if ((mTransferList != null) && !mTransferList.isEmpty()) {
+			for (Transfer transfer : mTransferList) {
+				if (transfer.isNewTransfer()) {
 
-		/** */
-		private BackgroundTransferTask(Transfer transfer) {
-			this.transfer = transfer;
+					// Start transfer
+					TransferTask task = new FTPTransferTask(this);
+					transfer.setNewTransfer(false);
+					task.execute(transfer);
+
+					// Notify
+					if (listener != null) {
+						listener.onUpdateTransfer();
+					}
+
+					break;
+				}
+			}
 		}
+	}
 
-		/**
-		 * @see android.os.AsyncTask#onPreExecute()
-		 */
-		@Override
-		protected void onPreExecute() {
-			super.onPreExecute();
-
-			// // Send begin events
-			// notifyListeners(mOperation.getBeginEvents());
+	/**
+	 * @see net.abachar.androftp.transfers.manager.TransferTaskProgressListener#onProgressUpdate()
+	 */
+	@Override
+	public void onProgressUpdate() {
+		if (listener != null) {
+			listener.onUpdateTransfer();
 		}
+	}
 
-		/**
-		 * @see android.os.AsyncTask#doInBackground(Params[])
-		 */
-		@Override
-		protected String doInBackground(Void... params) {
-			// BackgroundOperationResult result = new
-			// BackgroundOperationResult();
-			//
-			// try {
-			// switch (mOperation.getId()) {
-			//
-			// case BackgroundOperation.CONNECT_ID:
-			// doConnect();
-			// break;
-			//
-			// case BackgroundOperation.CHANGE_TO_PARENT_DIRECTORY_ID:
-			// doChangeToParentDirectory();
-			// break;
-			//
-			// case BackgroundOperation.CHANGE_WORKING_DIRECTORY_ID:
-			// doChangeWorkingDirectory(params[0]);
-			// break;
-			//
-			// case BackgroundOperation.CHANGE_ORDER_BY_ID:
-			// Collections.sort(mFileList, mOrderByComparator);
-			// break;
-			//
-			// case BackgroundOperation.DELETE_FILES_ID:
-			// doDeleteFiles(params);
-			// break;
-			//
-			// case BackgroundOperation.CREATE_NEW_FOLDER_ID:
-			// doCreateNewfolder(params[0]);
-			// break;
-			//
-			// case BackgroundOperation.RENAME_FILE_ID:
-			// doRenameFile(params[0], params[1]);
-			// break;
-			//
-			// case BackgroundOperation.REFRESH_ID:
-			// doRefresh();
-			// break;
-			// }
-			//
-			// result.setSuccess(true);
-			// } catch (ConnectionException ex) {
-			// result.setSuccess(false);
-			// result.addReplacementEvent(FileManagerEvent.ERROR_CONNECTION);
-			//
-			// } catch (FileManagerException ex) {
-			// result.setSuccess(false);
-			// }
-			return null;
-		}
+	/**
+	 * @return the mTransferList
+	 */
+	public List<Transfer> getTransferList() {
+		return mTransferList;
+	}
 
-		/**
-		 * @see android.os.AsyncTask#onProgressUpdate(Progress[])
-		 */
-		@Override
-		protected void onProgressUpdate(Integer... values) {
-			super.onProgressUpdate(values);
-		}
+	/**
+	 * 
+	 * @param listener
+	 */
+	public void setListener(TransferListener listener) {
+		this.listener = listener;
 
-		/**
-		 * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
-		 */
-		@Override
-		protected void onPostExecute(String result) {
-			super.onPostExecute(result);
+		// Initial
+		if ((mTransferList != null) && !mTransferList.isEmpty()) {
+			listener.onUpdateTransfer();
 		}
 	}
 }
