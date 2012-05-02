@@ -198,7 +198,6 @@ public class TransferAdapter extends BaseAdapter implements ListAdapter, OnClick
 			mTransferList = null;
 		}
 		notifyDataSetChanged();
-
 	}
 
 	/**

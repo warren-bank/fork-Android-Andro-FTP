@@ -60,7 +60,7 @@ public class FTPTransferTask extends TransferTask {
 				}
 
 				// Open local file
-				FileOutputStream fos = new FileOutputStream(transfer.getDestinationAbsolutePath());
+				FileOutputStream fos = new FileOutputStream(getDestinationFullPath(transfer));
 				CountingOutputStream cos = new CountingOutputStream(fos) {
 					protected void beforeWrite(int n) {
 						super.beforeWrite(n);
@@ -116,7 +116,7 @@ public class FTPTransferTask extends TransferTask {
 				}
 
 				// Open local file
-				FileInputStream fis = new FileInputStream(transfer.getSourceAbsolutePath());
+				FileInputStream fis = new FileInputStream(getSourceFullPath(transfer));
 				CountingInputStream cis = new CountingInputStream(fis) {
 					protected void afterRead(int n) {
 						super.afterRead(n);

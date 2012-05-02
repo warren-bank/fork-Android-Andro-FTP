@@ -6,31 +6,46 @@ package net.abachar.androftp.transfers.manager;
  */
 public class Transfer {
 
+	/** Transfer UID */
+	private int id;
+
 	/** */
 	private boolean checked;
 
-	/** */
-	private boolean newTransfer;
+	/** Awaiting download */
+	private boolean pending;
 
-	/** */
+	/** Transfer direction */
 	private TransferDirection direction;
 
-	/** */
+	/** File name */
 	private String name;
 
-	/** */
+	/** Source directory */
 	private String sourcePath;
-	private String sourceAbsolutePath;
 
-	/** */
+	/** Destination directory */
 	private String destinationPath;
-	private String destinationAbsolutePath;
 
 	/** */
 	private long fileSize;
 
 	/** */
 	private int progress;
+
+	/**
+	 * 
+	 */
+	public Transfer(int id) {
+		this.id = id;
+	}
+
+	/**
+	 * @return the id
+	 */
+	public int getId() {
+		return id;
+	}
 
 	/**
 	 * @return the checked
@@ -48,18 +63,18 @@ public class Transfer {
 	}
 
 	/**
-	 * @return the newTransfer
+	 * @return the pending
 	 */
-	public boolean isNewTransfer() {
-		return newTransfer;
+	public boolean isPending() {
+		return pending;
 	}
 
 	/**
-	 * @param newTransfer
-	 *            the newTransfer to set
+	 * @param pending
+	 *            the pending to set
 	 */
-	public void setNewTransfer(boolean newTransfer) {
-		this.newTransfer = newTransfer;
+	public void setPending(boolean pending) {
+		this.pending = pending;
 	}
 
 	/**
@@ -108,21 +123,6 @@ public class Transfer {
 	}
 
 	/**
-	 * @return the sourceAbsolutePath
-	 */
-	public String getSourceAbsolutePath() {
-		return sourceAbsolutePath;
-	}
-
-	/**
-	 * @param sourceAbsolutePath
-	 *            the sourceAbsolutePath to set
-	 */
-	public void setSourceAbsolutePath(String sourceAbsolutePath) {
-		this.sourceAbsolutePath = sourceAbsolutePath;
-	}
-
-	/**
 	 * @return the destinationPath
 	 */
 	public String getDestinationPath() {
@@ -135,21 +135,6 @@ public class Transfer {
 	 */
 	public void setDestinationPath(String destinationPath) {
 		this.destinationPath = destinationPath;
-	}
-
-	/**
-	 * @return the destinationAbsolutePath
-	 */
-	public String getDestinationAbsolutePath() {
-		return destinationAbsolutePath;
-	}
-
-	/**
-	 * @param destinationAbsolutePath
-	 *            the destinationAbsolutePath to set
-	 */
-	public void setDestinationAbsolutePath(String destinationAbsolutePath) {
-		this.destinationAbsolutePath = destinationAbsolutePath;
 	}
 
 	/**

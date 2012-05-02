@@ -1,6 +1,5 @@
 package net.abachar.androftp.transfers.manager;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +20,7 @@ public class TransferManager implements TransferTaskProgressListener {
 	private TransferListener listener;
 
 	/** List of all active transfers */
+	private int mTransferSequense;
 	private List<Transfer> mTransferList;
 
 	/**
@@ -28,6 +28,7 @@ public class TransferManager implements TransferTaskProgressListener {
 	 */
 	public TransferManager(Context context) {
 		// mContext = context;
+		mTransferSequense = 0;
 		mTransferList = new ArrayList<Transfer>();
 	}
 
@@ -38,30 +39,21 @@ public class TransferManager implements TransferTaskProgressListener {
 	 */
 	public void addToTransferQueue(TransferDirection direction, FileEntry entry) {
 
-		Transfer transfer = new Transfer();
-		transfer.setNewTransfer(true);
+		Transfer transfer = new Transfer(++mTransferSequense);
+		transfer.setPending(true);
 		transfer.setName(entry.getName());
 		transfer.setDirection(direction);
 		transfer.setFileSize(entry.getSize());
-		transfer.setProgress(0);
 
 		// Source path
 		transfer.setSourcePath(entry.getParentPath());
-		transfer.setSourceAbsolutePath(entry.getAbsolutePath());
 
 		// Destination path
-		String destinationPath;
 		if (transfer.isUpload()) {
-			destinationPath = MainApplication.getInstance().getServerFileManager().getCurrentPath();
+			transfer.setDestinationPath(MainApplication.getInstance().getServerFileManager().getCurrentPath());
 		} else {
-			destinationPath = MainApplication.getInstance().getLocalFileManager().getCurrentPath();
+			transfer.setDestinationPath(MainApplication.getInstance().getLocalFileManager().getCurrentPath());
 		}
-		transfer.setDestinationPath(destinationPath);
-
-		if (!destinationPath.endsWith(File.separator)) {
-			destinationPath = destinationPath + File.separator;
-		}
-		transfer.setDestinationAbsolutePath(destinationPath + entry.getName());
 
 		// Add transfer
 		mTransferList.add(transfer);
@@ -74,11 +66,11 @@ public class TransferManager implements TransferTaskProgressListener {
 
 		if ((mTransferList != null) && !mTransferList.isEmpty()) {
 			for (Transfer transfer : mTransferList) {
-				if (transfer.isNewTransfer()) {
+				if (transfer.isPending()) {
 
 					// Start transfer
 					TransferTask task = new FTPTransferTask(this);
-					transfer.setNewTransfer(false);
+					transfer.setPending(false);
 					task.execute(transfer);
 
 					// Notify
@@ -93,6 +85,13 @@ public class TransferManager implements TransferTaskProgressListener {
 	}
 
 	/**
+	 * @see net.abachar.androftp.transfers.manager.TransferTaskProgressListener#onBeginTransfer()
+	 */
+	@Override
+	public void onBeginTransfer() {
+	}
+
+	/**
 	 * @see net.abachar.androftp.transfers.manager.TransferTaskProgressListener#onProgressUpdate()
 	 */
 	@Override
@@ -100,6 +99,13 @@ public class TransferManager implements TransferTaskProgressListener {
 		if (listener != null) {
 			listener.onUpdateTransfer();
 		}
+	}
+
+	/**
+	 * @see net.abachar.androftp.transfers.manager.TransferTaskProgressListener#onEndTransfer()
+	 */
+	@Override
+	public void onEndTransfer() {
 	}
 
 	/**

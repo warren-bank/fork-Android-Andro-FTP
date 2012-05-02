@@ -7,7 +7,17 @@ package net.abachar.androftp.transfers.manager;
 public interface TransferTaskProgressListener {
 
 	/**
+	 *
+	 */
+	void onBeginTransfer();
+
+	/**
 	 * 
 	 */
 	void onProgressUpdate();
+
+	/**
+	 * 
+	 */
+	void onEndTransfer();
 }
