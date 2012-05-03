@@ -19,5 +19,5 @@ public interface TransferTaskProgressListener {
 	/**
 	 * 
 	 */
-	void onEndTransfer();
+	void onEndTransfer(int transferId);
 }

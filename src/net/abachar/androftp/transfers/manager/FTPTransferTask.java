@@ -2,7 +2,9 @@ package net.abachar.androftp.transfers.manager;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.SocketException;
 
 import net.abachar.androftp.MainApplication;
 import net.abachar.androftp.filelist.manager.FTPFileManager;
@@ -24,7 +26,7 @@ import android.util.Log;
 public class FTPTransferTask extends TransferTask {
 
 	/** */
-	private FTPClient ftp;
+	private FTPClient mFTPClient;
 
 	/**
 	 *
@@ -39,51 +41,56 @@ public class FTPTransferTask extends TransferTask {
 	@Override
 	protected void doInBackgroundDownload() {
 
-		// Connect
-		connect();
+		try {
+			// Create client
+			if (mFTPClient == null) {
+				createFTPClient();
+			}
 
-		// Star download
-		if (ftp != null) {
-			try {
+			if (!mFTPClient.isConnected()) {
+				connect();
+			}
 
-				// if (binaryTransfer) {
-				ftp.setFileType(FTP.ASCII_FILE_TYPE);
-				// }
+			// if (binaryTransfer) {
+			mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
+			// }
 
-				// Use passive mode as default because most of us are
-				// behind firewalls these days.
-				ftp.enterLocalPassiveMode();
+			// Use passive mode as default because most of us are
+			// behind firewalls these days.
+			mFTPClient.enterLocalPassiveMode();
 
-				// Go to directory
-				if (!ftp.printWorkingDirectory().equals(transfer.getSourcePath())) {
-					ftp.changeWorkingDirectory(transfer.getSourcePath());
+			// Go to directory
+			if (!mFTPClient.printWorkingDirectory().equals(mTransfer.getSourcePath())) {
+				mFTPClient.changeWorkingDirectory(mTransfer.getSourcePath());
+			}
+
+			// Open local file
+			FileOutputStream fos = new FileOutputStream(mTransfer.getFullDestinationPath());
+			CountingOutputStream cos = new CountingOutputStream(fos) {
+				protected void beforeWrite(int n) {
+					super.beforeWrite(n);
+
+					int p = Math.round((getCount() * 100) / mTransfer.getFileSize());
+					publishProgress(new Integer(p));
+					Log.i("DOWN", mTransfer.getName() + " : -> " + p + "%");
 				}
+			};
+			mFTPClient.retrieveFile(mTransfer.getName(), cos);
 
-				// Open local file
-				FileOutputStream fos = new FileOutputStream(getDestinationFullPath(transfer));
-				CountingOutputStream cos = new CountingOutputStream(fos) {
-					protected void beforeWrite(int n) {
-						super.beforeWrite(n);
+			// Close
+			fos.close();
+			mFTPClient.logout();
 
-						int p = Math.round((getCount() * 100) / transfer.getFileSize());
-						publishProgress(new Integer(p));
-						Log.i("DOWN", transfer.getName() + " : -> " + p + "%");
-					}
-				};
-				ftp.retrieveFile(transfer.getName(), cos);
-
-				// Close
-				fos.close();
-				ftp.logout();
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				if (ftp.isConnected()) {
-					try {
-						ftp.disconnect();
-					} catch (Exception ex) {
-						// do nothing
-					}
+		} catch (SocketException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if ((mFTPClient == null) && mFTPClient.isConnected()) {
+				try {
+					mFTPClient.disconnect();
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
 			}
 		}
@@ -95,91 +102,85 @@ public class FTPTransferTask extends TransferTask {
 	@Override
 	protected void doInBackgroundUpload() {
 
-		// Connect
-		connect();
-
-		// Star download
-		if (ftp != null) {
-			try {
-
-				// if (binaryTransfer) {
-				ftp.setFileType(FTP.ASCII_FILE_TYPE);
-				// }
-
-				// Use passive mode as default because most of us are
-				// behind firewalls these days.
-				ftp.enterLocalPassiveMode();
-
-				// Go to directory
-				if (!ftp.printWorkingDirectory().equals(transfer.getDestinationPath())) {
-					ftp.changeWorkingDirectory(transfer.getDestinationPath());
-				}
-
-				// Open local file
-				FileInputStream fis = new FileInputStream(getSourceFullPath(transfer));
-				CountingInputStream cis = new CountingInputStream(fis) {
-					protected void afterRead(int n) {
-						super.afterRead(n);
-
-						int sent = getCount() - n;
-
-						int p = Math.round((sent * 100) / transfer.getFileSize());
-						publishProgress(new Integer(p));
-						Log.i("UP", transfer.getName() + " : -> " + p + "%");
-					}
-				};
-				ftp.storeFile(transfer.getName(), cis);
-
-				// Close
-				fis.close();
-				ftp.logout();
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				if (ftp.isConnected()) {
-					try {
-						ftp.disconnect();
-					} catch (Exception ex) {
-						// do nothing
-					}
-				}
+		try {
+			// Create client
+			if (mFTPClient == null) {
+				createFTPClient();
 			}
+
+			if (!mFTPClient.isConnected()) {
+				connect();
+			}
+
+			// if (binaryTransfer) {
+			mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
+			// }
+
+			// Use passive mode as default because most of us are
+			// behind firewalls these days.
+			mFTPClient.enterLocalPassiveMode();
+
+			// Go to directory
+			if (!mFTPClient.printWorkingDirectory().equals(mTransfer.getDestinationPath())) {
+				mFTPClient.changeWorkingDirectory(mTransfer.getDestinationPath());
+			}
+
+			// Open local file
+			FileInputStream fis = new FileInputStream(mTransfer.getFullSourcePath());
+			CountingInputStream cis = new CountingInputStream(fis) {
+				protected void afterRead(int n) {
+					super.afterRead(n);
+
+					int sent = getCount() - n;
+
+					int p = Math.round((sent * 100) / mTransfer.getFileSize());
+					publishProgress(new Integer(p));
+					Log.i("UP", mTransfer.getName() + " : -> " + p + "%");
+				}
+			};
+			mFTPClient.storeFile(mTransfer.getName(), cis);
+
+			// Close
+			fis.close();
+
+		} catch (SocketException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
 	/**
 	 * 
 	 */
-	protected void connect() {
+	private void createFTPClient() {
+		mFTPClient = new FTPClient();
+		mFTPClient.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
+	}
+
+	/**
+	 * @throws IOException
+	 * @throws SocketException
+	 * 
+	 */
+	private void connect() throws SocketException, IOException {
 
 		FTPFileManager fileManager = (FTPFileManager) MainApplication.getInstance().getServerFileManager();
 
-		// Connect
-		try {
+		// Connect to server
+		mFTPClient.connect(fileManager.getHost(), fileManager.getPort());
 
-			// New ftp client
-			ftp = new FTPClient();
-			ftp.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
+		// Check the reply code to verify success.
+		int reply = mFTPClient.getReplyCode();
+		if (!FTPReply.isPositiveCompletion(reply)) {
+			return;
+		}
 
-			// Connect to server
-			ftp.connect(fileManager.getHost(), fileManager.getPort());
-
-			// Check the reply code to verify success.
-			int reply = ftp.getReplyCode();
-			if (!FTPReply.isPositiveCompletion(reply)) {
+		if (fileManager.getLogontype() == Logontype.NORMAL) {
+			if (!mFTPClient.login(fileManager.getUsername(), fileManager.getPassword())) {
+				mFTPClient.logout();
 				return;
 			}
-
-			if (fileManager.getLogontype() == Logontype.NORMAL) {
-				if (!ftp.login(fileManager.getUsername(), fileManager.getPassword())) {
-					ftp.logout();
-					return;
-				}
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			ftp = null;
 		}
 	}
 }

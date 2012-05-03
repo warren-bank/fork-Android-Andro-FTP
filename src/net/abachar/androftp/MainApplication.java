@@ -51,7 +51,7 @@ public class MainApplication extends Application {
 		mServerFileManager.init(bundle);
 
 		// Transfers
-		mTransferManager = new TransferManager(this);
+		mTransferManager = new TransferManager();
 	}
 
 	/**

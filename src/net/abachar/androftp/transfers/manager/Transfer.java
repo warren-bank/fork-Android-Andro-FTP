@@ -1,5 +1,7 @@
 package net.abachar.androftp.transfers.manager;
 
+import java.io.File;
+
 /**
  * 
  * @author abachar
@@ -173,5 +175,65 @@ public class Transfer {
 	 */
 	public boolean isUpload() {
 		return direction == TransferDirection.UPLOAD;
+	}
+
+	/**
+	 * 
+	 */
+	public String toStringSourcePath() {
+
+		if (direction == TransferDirection.UPLOAD) {
+			return "Local:" + getFullSourcePath();
+		} /* else { */
+		return "FTP:" + getFullSourcePath();
+		/* } */
+	}
+
+	/**
+	 * 
+	 */
+	public String getFullSourcePath() {
+		StringBuilder sb = new StringBuilder();
+
+		// Path
+		sb.append(sourcePath);
+		if (!sourcePath.endsWith(File.separator)) {
+			sb.append(File.separator);
+		}
+
+		// File name
+		sb.append(name);
+
+		return sb.toString();
+	}
+
+	/**
+	 * 
+	 */
+	public String toStringDestinationPath() {
+
+		if (direction == TransferDirection.DOWNLOAD) {
+			return "Local:" + getFullDestinationPath();
+		} /* else { */
+		return "FTP:" + getFullDestinationPath();
+		/* } */
+	}
+
+	/**
+	 * 
+	 */
+	public String getFullDestinationPath() {
+		StringBuilder sb = new StringBuilder();
+
+		// Path
+		sb.append(destinationPath);
+		if (!destinationPath.endsWith(File.separator)) {
+			sb.append(File.separator);
+		}
+
+		// File name
+		sb.append(name);
+
+		return sb.toString();
 	}
 }

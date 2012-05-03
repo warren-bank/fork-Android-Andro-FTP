@@ -1,20 +1,17 @@
 package net.abachar.androftp.transfers.manager;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import net.abachar.androftp.MainApplication;
 import net.abachar.androftp.filelist.manager.FileEntry;
-import android.content.Context;
 
 /**
  * 
  * @author abachar
  */
 public class TransferManager implements TransferTaskProgressListener {
-
-	/** Context */
-	// private Context mContext;
 
 	/** */
 	private TransferListener listener;
@@ -23,13 +20,17 @@ public class TransferManager implements TransferTaskProgressListener {
 	private int mTransferSequense;
 	private List<Transfer> mTransferList;
 
+	/** */
+	private final int mMaxTransferTaskCount = 2;
+	private TransferTask[] mTransferTasks;
+
 	/**
 	 * Default constructor
 	 */
-	public TransferManager(Context context) {
-		// mContext = context;
+	public TransferManager() {
 		mTransferSequense = 0;
-		mTransferList = new ArrayList<Transfer>();
+		mTransferList = (List<Transfer>) Collections.synchronizedList(new ArrayList<Transfer>());
+		mTransferTasks = new TransferTask[mMaxTransferTaskCount];
 	}
 
 	/**
@@ -64,23 +65,46 @@ public class TransferManager implements TransferTaskProgressListener {
 	 */
 	public void processTransferQueue() {
 
-		if ((mTransferList != null) && !mTransferList.isEmpty()) {
-			for (Transfer transfer : mTransferList) {
-				if (transfer.isPending()) {
+		// No task ?
+		if ((mTransferList == null) || mTransferList.isEmpty()) {
+			return;
+		}
 
-					// Start transfer
-					TransferTask task = new FTPTransferTask(this);
-					transfer.setPending(false);
-					task.execute(transfer);
+		// While we have available task and pending transfer
+		while (true) {
 
-					// Notify
-					if (listener != null) {
-						listener.onUpdateTransfer();
-					}
-
+			// Available task ?
+			TransferTask task = null;
+			for (int i = 0; i < mMaxTransferTaskCount; i++) {
+				if ((mTransferTasks[i] == null) || mTransferTasks[i].isComplete()) {
+					task = new FTPTransferTask(this);
+					mTransferTasks[i] = task;
 					break;
 				}
 			}
+
+			// No available task
+			if (task == null) {
+				break;
+			}
+
+			// Pending transfer
+			Transfer pendingTransfer = null;
+			for (Transfer transfer : mTransferList) {
+				if (transfer.isPending()) {
+					pendingTransfer = transfer;
+					break;
+				}
+			}
+
+			// No pending transfer
+			if (pendingTransfer == null) {
+				break;
+			}
+
+			// Start transfer
+			pendingTransfer.setPending(false);
+			task.execute(pendingTransfer);
 		}
 	}
 
@@ -89,6 +113,9 @@ public class TransferManager implements TransferTaskProgressListener {
 	 */
 	@Override
 	public void onBeginTransfer() {
+		if (listener != null) {
+			listener.onUpdateTransfer();
+		}
 	}
 
 	/**
@@ -105,7 +132,24 @@ public class TransferManager implements TransferTaskProgressListener {
 	 * @see net.abachar.androftp.transfers.manager.TransferTaskProgressListener#onEndTransfer()
 	 */
 	@Override
-	public void onEndTransfer() {
+	public void onEndTransfer(int transferId) {
+
+		// Delete finished transfer
+		List<Transfer> newTransferList = new ArrayList<Transfer>();
+		for (Transfer transfer : mTransferList) {
+			if (transfer.getId() != transferId) {
+				newTransferList.add(transfer);
+			}
+		}
+		mTransferList = newTransferList;
+
+		// Notify listner
+		if (listener != null) {
+			listener.onUpdateTransfer();
+		}
+
+		// Proccess next download
+		processTransferQueue();
 	}
 
 	/**

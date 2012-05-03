@@ -73,6 +73,7 @@ public class TransferAdapter extends BaseAdapter implements ListAdapter, OnClick
 			holder.mSourcePath = (TextView) convertView.findViewById(R.id.transfer_source_path);
 			holder.mDestinationPath = (TextView) convertView.findViewById(R.id.transfer_destination_path);
 			holder.mFileSize = (TextView) convertView.findViewById(R.id.transfer_file_size);
+			holder.mTransferPending = (TextView) convertView.findViewById(R.id.transfer_pending);
 			holder.mProgress = (ProgressBar) convertView.findViewById(R.id.transfer_progress);
 			convertView.setTag(holder);
 		} else {
@@ -82,9 +83,8 @@ public class TransferAdapter extends BaseAdapter implements ListAdapter, OnClick
 		Transfer transfer = mTransferList.get(position);
 		holder.mCheckbox.setChecked(transfer.isChecked());
 		holder.mCheckbox.setTag(new Integer(position));
-		holder.mSourcePath.setText(transfer.getSourcePath());
-		holder.mDestinationPath.setText(transfer.getDestinationPath());
-		holder.mProgress.setProgress(transfer.getProgress());
+		holder.mSourcePath.setText(transfer.toStringSourcePath());
+		holder.mDestinationPath.setText(transfer.toStringDestinationPath());
 
 		if (transfer.isUpload()) {
 			holder.mDirection.setImageDrawable(mUploadIcon);
@@ -103,6 +103,16 @@ public class TransferAdapter extends BaseAdapter implements ListAdapter, OnClick
 			} else {
 				holder.mFileSize.setText(size + " Ko");
 			}
+		}
+
+		// Progression
+		if (transfer.isPending()) {
+			holder.mTransferPending.setVisibility(View.VISIBLE);
+			holder.mProgress.setVisibility(View.GONE);
+		} else {
+			holder.mTransferPending.setVisibility(View.GONE);
+			holder.mProgress.setVisibility(View.VISIBLE);
+			holder.mProgress.setProgress(transfer.getProgress());
 		}
 
 		return convertView;
@@ -222,6 +232,7 @@ public class TransferAdapter extends BaseAdapter implements ListAdapter, OnClick
 		TextView mSourcePath;
 		TextView mDestinationPath;
 		TextView mFileSize;
+		TextView mTransferPending;
 		ProgressBar mProgress;
 	}
 }

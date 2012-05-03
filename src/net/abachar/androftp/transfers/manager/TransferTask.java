@@ -1,37 +1,24 @@
 package net.abachar.androftp.transfers.manager;
 
-import java.io.File;
-
 import android.os.AsyncTask;
 
 public abstract class TransferTask extends AsyncTask<Transfer, Integer, String> {
 
-	/**
-	 * 
-	 */
+	/** */
 	protected TransferTaskProgressListener mProgressListener;
 
-	/**
-	 * 
-	 */
-	protected Transfer transfer;
+	/** */
+	protected Transfer mTransfer;
+
+	/** */
+	protected boolean mComplete;
 
 	/**
 	 *
 	 */
 	public TransferTask(TransferTaskProgressListener progressListener) {
 		mProgressListener = progressListener;
-	}
-
-	/**
-	 * @see android.os.AsyncTask#onPreExecute()
-	 */
-	@Override
-	protected void onPreExecute() {
-		super.onPreExecute();
-
-		// Start of transfer
-		mProgressListener.onBeginTransfer();
+		mComplete = false;
 	}
 
 	/**
@@ -41,10 +28,14 @@ public abstract class TransferTask extends AsyncTask<Transfer, Integer, String> 
 	protected String doInBackground(Transfer... transfers) {
 
 		// Get transfer
-		transfer = transfers[0];
-		transfer.setProgress(0);
+		mTransfer = transfers[0];
+		mTransfer.setProgress(0);
 
-		if (transfer.getDirection() == TransferDirection.DOWNLOAD) {
+		// Start transfer
+		publishProgress(0);
+
+		// Download or upload
+		if (mTransfer.getDirection() == TransferDirection.DOWNLOAD) {
 			doInBackgroundDownload();
 		} else /* if (transfer.getDirection() == TransferDirection.UPLOAD) */{
 			doInBackgroundUpload();
@@ -60,9 +51,15 @@ public abstract class TransferTask extends AsyncTask<Transfer, Integer, String> 
 	protected void onProgressUpdate(Integer... values) {
 		super.onProgressUpdate(values);
 
-		// Update progress
-		transfer.setProgress(values[0].intValue());
-		mProgressListener.onProgressUpdate();
+		int p = values[0].intValue();
+		mTransfer.setProgress(p);
+
+		// Publish update
+		if (p == 0) {
+			mProgressListener.onBeginTransfer();
+		} else {
+			mProgressListener.onProgressUpdate();
+		}
 	}
 
 	/**
@@ -73,40 +70,16 @@ public abstract class TransferTask extends AsyncTask<Transfer, Integer, String> 
 		super.onPostExecute(result);
 
 		// Full tranfer
-		transfer.setProgress(100);
-
-		// End of transfer
-		mProgressListener.onEndTransfer();
+		mTransfer.setProgress(100);
+		mComplete = true;
+		mProgressListener.onEndTransfer(mTransfer.getId());
 	}
 
 	/**
-	 * 
-	 * @param transfer
-	 * @return
+	 * @return the mComplete
 	 */
-	protected String getDestinationFullPath(Transfer transfer) {
-
-		String destinationPath = transfer.getDestinationPath();
-		if (!destinationPath.endsWith(File.separator)) {
-			destinationPath += File.separator;
-		}
-
-		return destinationPath + transfer.getName();
-	}
-
-	/**
-	 * 
-	 * @param transfer
-	 * @return
-	 */
-	protected String getSourceFullPath(Transfer transfer) {
-
-		String sourcePath = transfer.getSourcePath();
-		if (!sourcePath.endsWith(File.separator)) {
-			sourcePath += File.separator;
-		}
-
-		return sourcePath + transfer.getName();
+	public boolean isComplete() {
+		return mComplete;
 	}
 
 	/**
