@@ -1,5 +1,7 @@
 package net.abachar.androftp.transfers.manager;
 
+import java.util.List;
+
 import android.os.AsyncTask;
 
 public abstract class TransferTask extends AsyncTask<Transfer, Integer, String> {
@@ -8,17 +10,24 @@ public abstract class TransferTask extends AsyncTask<Transfer, Integer, String> 
 	protected TransferTaskProgressListener mProgressListener;
 
 	/** */
-	protected Transfer mTransfer;
-
-	/** */
-	protected boolean mComplete;
+	protected final List<Transfer> mTransferList;
+	protected Transfer mCurrentTransfer;
 
 	/**
 	 *
 	 */
-	public TransferTask(TransferTaskProgressListener progressListener) {
+	public TransferTask(TransferTaskProgressListener progressListener, List<Transfer> transferList) {
 		mProgressListener = progressListener;
-		mComplete = false;
+		mTransferList = transferList;
+	}
+
+	/**
+	 * @see android.os.AsyncTask#onPreExecute()
+	 */
+	@Override
+	protected void onPreExecute() {
+		super.onPreExecute();
+		mProgressListener.onBeginTransferTask(this);
 	}
 
 	/**
@@ -27,18 +36,33 @@ public abstract class TransferTask extends AsyncTask<Transfer, Integer, String> 
 	@Override
 	protected String doInBackground(Transfer... transfers) {
 
-		// Get transfer
-		mTransfer = transfers[0];
-		mTransfer.setProgress(0);
+		for (;;) {
+			mCurrentTransfer = null;
+			synchronized (mTransferList) {
+				for (Transfer t : mTransferList) {
+					if (t.isPending()) {
+						mCurrentTransfer = t;
+						mCurrentTransfer.setPending(false);
+						break;
+					}
+				}
+			}
 
-		// Start transfer
-		publishProgress(0);
+			// No pending transfer
+			if (mCurrentTransfer == null) {
+				break;
+			}
 
-		// Download or upload
-		if (mTransfer.getDirection() == TransferDirection.DOWNLOAD) {
-			doInBackgroundDownload();
-		} else /* if (transfer.getDirection() == TransferDirection.UPLOAD) */{
-			doInBackgroundUpload();
+			// Prepare chosen transfer
+			mCurrentTransfer.setProgress(0);
+			publishProgress(mCurrentTransfer.getId(), 0);
+
+			// Download or upload
+			if (mCurrentTransfer.getDirection() == TransferDirection.DOWNLOAD) {
+				doInBackgroundDownload();
+			} else /* if (transfer.getDirection() == TransferDirection.UPLOAD) */{
+				doInBackgroundUpload();
+			}
 		}
 
 		return null;
@@ -51,14 +75,21 @@ public abstract class TransferTask extends AsyncTask<Transfer, Integer, String> 
 	protected void onProgressUpdate(Integer... values) {
 		super.onProgressUpdate(values);
 
-		int p = values[0].intValue();
-		mTransfer.setProgress(p);
+		int transferId = values[0];
+		int progress = values[1];
 
 		// Publish update
-		if (p == 0) {
-			mProgressListener.onBeginTransfer();
-		} else {
-			mProgressListener.onProgressUpdate();
+		switch (progress) {
+			case 0:
+				mProgressListener.onBeginTransfer(this, transferId);
+				break;
+
+			case 101: /* Finished */
+				mProgressListener.onEndTransfer(this, transferId);
+				break;
+
+			default:
+				mProgressListener.onProgressUpdate(this, transferId);
 		}
 	}
 
@@ -68,18 +99,6 @@ public abstract class TransferTask extends AsyncTask<Transfer, Integer, String> 
 	@Override
 	protected void onPostExecute(String result) {
 		super.onPostExecute(result);
-
-		// Full tranfer
-		mTransfer.setProgress(100);
-		mComplete = true;
-		mProgressListener.onEndTransfer(mTransfer.getId());
-	}
-
-	/**
-	 * @return the mComplete
-	 */
-	public boolean isComplete() {
-		return mComplete;
 	}
 
 	/**

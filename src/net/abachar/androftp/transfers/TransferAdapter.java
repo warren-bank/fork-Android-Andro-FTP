@@ -110,9 +110,12 @@ public class TransferAdapter extends BaseAdapter implements ListAdapter, OnClick
 			holder.mTransferPending.setVisibility(View.VISIBLE);
 			holder.mProgress.setVisibility(View.GONE);
 		} else {
-			holder.mTransferPending.setVisibility(View.GONE);
-			holder.mProgress.setVisibility(View.VISIBLE);
-			holder.mProgress.setProgress(transfer.getProgress());
+			holder.mTransferPending.setVisibility(View.VISIBLE);
+			holder.mProgress.setVisibility(View.GONE);
+			holder.mTransferPending.setText(transfer.getProgress() + " %");
+			// holder.mTransferPending.setVisibility(View.GONE);
+			// holder.mProgress.setVisibility(View.VISIBLE);
+			// holder.mProgress.setProgress(transfer.getProgress());
 		}
 
 		return convertView;

@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.SocketException;
+import java.util.List;
 
 import net.abachar.androftp.MainApplication;
 import net.abachar.androftp.filelist.manager.FTPFileManager;
@@ -16,8 +17,6 @@ import org.apache.commons.net.PrintCommandListener;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
-
-import android.util.Log;
 
 /**
  * 
@@ -31,8 +30,33 @@ public class FTPTransferTask extends TransferTask {
 	/**
 	 *
 	 */
-	public FTPTransferTask(TransferTaskProgressListener progressListener) {
-		super(progressListener);
+	public FTPTransferTask(TransferTaskProgressListener progressListener, List<Transfer> transferList) {
+		super(progressListener, transferList);
+	}
+
+	/**
+	 * @see android.os.AsyncTask#doInBackground(Params[])
+	 */
+	@Override
+	protected String doInBackground(Transfer... transfers) {
+
+		// Create ftp client
+		mFTPClient = new FTPClient();
+		mFTPClient.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
+
+		String retval = super.doInBackground(transfers);
+
+		// Disconnect ftp client
+		if ((mFTPClient != null) && mFTPClient.isConnected()) {
+			try {
+				mFTPClient.logout();
+				mFTPClient.disconnect();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return retval;
 	}
 
 	/**
@@ -42,11 +66,7 @@ public class FTPTransferTask extends TransferTask {
 	protected void doInBackgroundDownload() {
 
 		try {
-			// Create client
-			if (mFTPClient == null) {
-				createFTPClient();
-			}
-
+			// Connect it if disconnected
 			if (!mFTPClient.isConnected()) {
 				connect();
 			}
@@ -55,44 +75,36 @@ public class FTPTransferTask extends TransferTask {
 			mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
 			// }
 
-			// Use passive mode as default because most of us are
-			// behind firewalls these days.
-			mFTPClient.enterLocalPassiveMode();
-
 			// Go to directory
-			if (!mFTPClient.printWorkingDirectory().equals(mTransfer.getSourcePath())) {
-				mFTPClient.changeWorkingDirectory(mTransfer.getSourcePath());
+			if (!mFTPClient.printWorkingDirectory().equals(mCurrentTransfer.getSourcePath())) {
+				mFTPClient.changeWorkingDirectory(mCurrentTransfer.getSourcePath());
 			}
 
 			// Open local file
-			FileOutputStream fos = new FileOutputStream(mTransfer.getFullDestinationPath());
+			FileOutputStream fos = new FileOutputStream(mCurrentTransfer.getFullDestinationPath());
 			CountingOutputStream cos = new CountingOutputStream(fos) {
 				protected void beforeWrite(int n) {
 					super.beforeWrite(n);
 
-					int p = Math.round((getCount() * 100) / mTransfer.getFileSize());
-					publishProgress(new Integer(p));
-					Log.i("DOWN", mTransfer.getName() + " : -> " + p + "%");
+					int progress = Math.round((getCount() * 100) / mCurrentTransfer.getFileSize());
+					mCurrentTransfer.setProgress(progress);
+					publishProgress(mCurrentTransfer.getId(), progress);
 				}
 			};
-			mFTPClient.retrieveFile(mTransfer.getName(), cos);
 
-			// Close
+			// Download file
+			mFTPClient.retrieveFile(mCurrentTransfer.getName(), cos);
+
+			// Close local file
 			fos.close();
-			mFTPClient.logout();
+
+			// End of transfer
+			publishProgress(mCurrentTransfer.getId(), 101);
 
 		} catch (SocketException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
-		} finally {
-			if ((mFTPClient == null) && mFTPClient.isConnected()) {
-				try {
-					mFTPClient.disconnect();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
 		}
 	}
 
@@ -103,11 +115,7 @@ public class FTPTransferTask extends TransferTask {
 	protected void doInBackgroundUpload() {
 
 		try {
-			// Create client
-			if (mFTPClient == null) {
-				createFTPClient();
-			}
-
+			// Connect it if disconnected
 			if (!mFTPClient.isConnected()) {
 				connect();
 			}
@@ -116,46 +124,37 @@ public class FTPTransferTask extends TransferTask {
 			mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
 			// }
 
-			// Use passive mode as default because most of us are
-			// behind firewalls these days.
-			mFTPClient.enterLocalPassiveMode();
-
-			// Go to directory
-			if (!mFTPClient.printWorkingDirectory().equals(mTransfer.getDestinationPath())) {
-				mFTPClient.changeWorkingDirectory(mTransfer.getDestinationPath());
-			}
-
 			// Open local file
-			FileInputStream fis = new FileInputStream(mTransfer.getFullSourcePath());
+			FileInputStream fis = new FileInputStream(mCurrentTransfer.getFullSourcePath());
 			CountingInputStream cis = new CountingInputStream(fis) {
 				protected void afterRead(int n) {
 					super.afterRead(n);
 
-					int sent = getCount() - n;
-
-					int p = Math.round((sent * 100) / mTransfer.getFileSize());
-					publishProgress(new Integer(p));
-					Log.i("UP", mTransfer.getName() + " : -> " + p + "%");
+					int progress = Math.round((getCount() * 100) / mCurrentTransfer.getFileSize());
+					mCurrentTransfer.setProgress(progress);
+					publishProgress(mCurrentTransfer.getId(), progress);
 				}
 			};
-			mFTPClient.storeFile(mTransfer.getName(), cis);
 
-			// Close
+			// Go to directory
+			if (!mFTPClient.printWorkingDirectory().equals(mCurrentTransfer.getDestinationPath())) {
+				mFTPClient.changeWorkingDirectory(mCurrentTransfer.getDestinationPath());
+			}
+
+			// Upload file
+			mFTPClient.storeFile(mCurrentTransfer.getName(), cis);
+
+			// Close local file
 			fis.close();
+
+			// End of transfer
+			publishProgress(mCurrentTransfer.getId(), 101);
 
 		} catch (SocketException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-
-	/**
-	 * 
-	 */
-	private void createFTPClient() {
-		mFTPClient = new FTPClient();
-		mFTPClient.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
 	}
 
 	/**
@@ -182,5 +181,9 @@ public class FTPTransferTask extends TransferTask {
 				return;
 			}
 		}
+
+		// Use passive mode as default because most of us are
+		// behind firewalls these days.
+		mFTPClient.enterLocalPassiveMode();
 	}
 }

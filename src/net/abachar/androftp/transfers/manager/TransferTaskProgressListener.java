@@ -9,15 +9,25 @@ public interface TransferTaskProgressListener {
 	/**
 	 *
 	 */
-	void onBeginTransfer();
+	void onBeginTransferTask(TransferTask task);
+
+	/**
+	 *
+	 */
+	void onBeginTransfer(TransferTask task, int transferId);
 
 	/**
 	 * 
 	 */
-	void onProgressUpdate();
+	void onProgressUpdate(TransferTask task, int transferId);
 
 	/**
 	 * 
 	 */
-	void onEndTransfer(int transferId);
+	void onEndTransfer(TransferTask task, int transferId);
+
+	/**
+	 * 
+	 */
+	void onEndTransferTask(TransferTask task);
 }
