@@ -35,9 +35,10 @@ public class OrderByComparator implements Comparator<FileEntry> {
 
 		// Order by type
 		if (orderBy == OrderBy.TYPE) {
-			int ret = lhs.getType().compareTo(rhs.getType());
-			if (ret != 0) {
-				return ret;
+			int o1 = lhs.getType().getOrder();
+			int o2 = rhs.getType().getOrder();
+			if (o1 != o2) {
+				return (o1 < o2) ? -1 : 1;
 			}
 		}
 

@@ -41,12 +41,12 @@ public class MainApplication extends Application {
 	public void initManagers(MainActivity context, Bundle bundle) {
 
 		// Local manager
-		mLocalFileManager = new LocalFileManager(context);
+		mLocalFileManager = new LocalFileManager();
 		mLocalFileManager.addListener(context);
 		mLocalFileManager.init(bundle);
 
 		// Server manager
-		mServerFileManager = new FTPFileManager(context);
+		mServerFileManager = new FTPFileManager();
 		mServerFileManager.addListener(context);
 		mServerFileManager.init(bundle);
 

@@ -9,22 +9,21 @@ public class FileManagerException extends Exception {
 	/** serialVersionUID */
 	private static final long serialVersionUID = 6311192244838839385L;
 
+	/** */
+	private int mErrorCode;
+
 	/**
-	 * Constructs a new exception with the specified detail message.
 	 * 
-	 * @param message the detail message.
+	 * @param errorCode
 	 */
-	public FileManagerException(String message) {
-		super(message);
+	public FileManagerException(int errorCode) {
+		mErrorCode = errorCode;
 	}
 
 	/**
-	 * Constructs a new exception with the specified detail message and cause.
-	 * 
-	 * @param message the detail message
-	 * @param cause the cause 
+	 * @return the mErrorCode
 	 */
-	public FileManagerException(String message, Throwable cause) {
-		super(message, cause);
+	public int getErrorCode() {
+		return mErrorCode;
 	}
 }

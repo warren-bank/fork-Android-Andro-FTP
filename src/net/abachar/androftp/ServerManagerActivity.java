@@ -1,16 +1,22 @@
 package net.abachar.androftp;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
 import net.abachar.androftp.servers.Logontype;
 import net.abachar.androftp.servers.Server;
 import net.abachar.androftp.servers.ServerDataSource;
+import net.abachar.androftp.util.FileType;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.XmlResourceParser;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -59,6 +65,9 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		// Create file types map
+		loadFileTypes();
+
 		// Use server_manager view
 		setContentView(R.layout.server_manager);
 
@@ -83,6 +92,64 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 
 		// Get last used server
 		fillServerAdapter(mSharedPreferences.getLong("lastSelectedServer", -1));
+	}
+
+	/**
+	 * 
+	 */
+	private void loadFileTypes() {
+
+		try {
+			XmlResourceParser xrp = getResources().getXml(R.xml.file_types);
+			xrp.next();
+			int eventType = xrp.getEventType();
+			int order = 1; // 0 is reserved to folder
+			String tag, text = null, code = null, ext = null, icon = null, format = null, ascii = null;
+
+			while (eventType != XmlPullParser.END_DOCUMENT) {
+				switch (eventType) {
+
+					case XmlPullParser.START_TAG:
+						if ("file-type".equals(xrp.getName())) {
+							code = null;
+							ext = null;
+							icon = null;
+							format = null;
+							ascii = null;
+						}
+						break;
+
+					case XmlPullParser.END_TAG:
+						tag = xrp.getName();
+
+						if ("code".equals(tag)) {
+							code = text;
+						} else if ("extension".equals(tag)) {
+							ext = text;
+						} else if ("icon".equals(tag)) {
+							icon = text;
+						} else if ("format".equals(tag)) {
+							format = text;
+						} else if ("ascii".equals(tag)) {
+							ascii = text;
+						} else if ("file-type".equals(tag)) {
+							// Add current file type
+							FileType.addFileType(code, order++, ext, icon, format, ascii);
+						}
+						break;
+
+					case XmlPullParser.TEXT:
+						text = xrp.getText();
+						break;
+				}
+				eventType = xrp.next();
+			}
+
+		} catch (XmlPullParserException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**

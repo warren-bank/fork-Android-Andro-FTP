@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import android.content.Context;
 import android.os.AsyncTask;
 
 /**
@@ -14,9 +13,6 @@ import android.os.AsyncTask;
  * @author abachar
  */
 public abstract class AbstractFileManager implements FileManager {
-
-	/** Context */
-	protected Context mContext;
 
 	/** File manager listeners */
 	protected Set<FileManagerListener> mListeners;
@@ -40,8 +36,7 @@ public abstract class AbstractFileManager implements FileManager {
 	/**
 	 * Default constructor
 	 */
-	public AbstractFileManager(Context context) {
-		mContext = context;
+	public AbstractFileManager() {
 		mListeners = new HashSet<FileManagerListener>();
 		mConnected = false;
 		mInRootFolder = true;
@@ -91,18 +86,21 @@ public abstract class AbstractFileManager implements FileManager {
 			mListeners.add(listener);
 
 			// Notify new added listner
-			listener.onFileManagerEvent(this, FileManagerEvent.INITIAL_LIST_FILES);
+			FileManagerEvent fmEvent = new FileManagerEvent(FileManagerEvent.INITIAL_LIST_FILES);
+			fmEvent.setSource(this);
+			listener.onFileManagerEvent(fmEvent);
 		}
 	}
 
 	/**
 	 * 
-	 * @param fmm
+	 * @param fmEvent
 	 */
-	protected void notifyListeners(FileManagerEvent event) {
+	protected void notifyListeners(FileManagerEvent fmEvent) {
 		if (!mListeners.isEmpty()) {
+			fmEvent.setSource(this);
 			for (FileManagerListener listener : mListeners) {
-				listener.onFileManagerEvent(this, event);
+				listener.onFileManagerEvent(fmEvent);
 			}
 		}
 	}
@@ -189,7 +187,8 @@ public abstract class AbstractFileManager implements FileManager {
 			String d = dirname.toLowerCase();
 			for (FileEntry fileEntry : mFileList) {
 				if (d.equals(fileEntry.getName().toLowerCase())) {
-					// R.string.err_file_already_exists, Exception
+					notifyListeners(new FileManagerEvent(FileManagerEvent.ERR_FOLDER_ALREADY_EXISTS));
+					return;
 				}
 			}
 		}
@@ -213,6 +212,9 @@ public abstract class AbstractFileManager implements FileManager {
 
 		String newFileNameLowerCase = newFileName.toLowerCase();
 		boolean isSameName = newFileNameLowerCase.equals(fileName.toLowerCase());
+		if (isSameName) {
+			return;
+		}
 
 		// Old file aheck if a file with the same name already existe
 		FileEntry file = null;
@@ -222,10 +224,13 @@ public abstract class AbstractFileManager implements FileManager {
 				file = fileEntry;
 			}
 
-			if (!isSameName) {
-				if (newFileNameLowerCase.equals(fileEntry.getName().toLowerCase())) {
-					// R.string.err_file_already_exists, Exception
+			if (newFileNameLowerCase.equals(fileEntry.getName().toLowerCase())) {
+				if (fileEntry.isFolder()) {
+					notifyListeners(new FileManagerEvent(FileManagerEvent.ERR_FOLDER_ALREADY_EXISTS));
+				} else {
+					notifyListeners(new FileManagerEvent(FileManagerEvent.ERR_FILE_ALREADY_EXISTS));
 				}
+				return;
 			}
 		}
 
@@ -316,12 +321,13 @@ public abstract class AbstractFileManager implements FileManager {
 				}
 
 				result.setSuccess(true);
-			} catch (ConnectionException ex) {
-				result.setSuccess(false);
-				result.addReplacementEvent(FileManagerEvent.ERROR_CONNECTION);
+//			} catch (ConnectionException ex) {
+//				result.setSuccess(false);
+//				result.addEvent(new FileManagerEvent(FileManagerEvent.ERROR_CONNECTION));
 
 			} catch (FileManagerException ex) {
 				result.setSuccess(false);
+				result.addEvent(new FileManagerEvent(ex.getErrorCode()));
 			}
 			return result;
 		}
@@ -341,13 +347,14 @@ public abstract class AbstractFileManager implements FileManager {
 		protected void onPostExecute(BackgroundOperationResult result) {
 			super.onPostExecute(result);
 
+			// Send normal end events if success
 			if (result.isSuccess()) {
-				// Send normal end events
 				notifyListeners(mOperation.getEndEvents());
-			} else {
-				if (!result.getReplacementEvents().isEmpty()) {
-					notifyListeners(result.getReplacementEvents());
-				}
+			}
+
+			// Send replacement or aditionnal events
+			if (!result.getEvents().isEmpty()) {
+				notifyListeners(result.getEvents());
 			}
 		}
 	}

@@ -322,21 +322,22 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.manager.FileManagerListener#onFileManagerEvent(net.abachar.androftp.filelist.manager.FileManager,
-	 *      net.abachar.androftp.filelist.manager.FileManagerEvent)
+	 * @see net.abachar.androftp.filelist.manager.FileManagerListener#onFileManagerEvent(net.abachar.androftp.filelist.manager.FileManagerEvent)
 	 */
 	@Override
-	public void onFileManagerEvent(FileManager fm, FileManagerEvent msg) {
+	public void onFileManagerEvent(FileManagerEvent fmEvent) {
 
-		switch (msg) {
-			case WILL_LOAD_LIST_FILES:
-				if (fm == mWideBrowserFileManager) {
+		FileManager fmSource = fmEvent.getSource();
+
+		switch (fmEvent.getEvent()) {
+			case FileManagerEvent.WILL_LOAD_LIST_FILES:
+				if (fmSource == mWideBrowserFileManager) {
 					mWideBrowserCurrentDirectoryText.setText(getString(R.string.loading));
 					mWideBrowserFileAdapter.setFiles(null);
 					mWideBrowserGoParentButton.setVisibility(View.GONE);
 					mWideBrowserLoadingProgress.setVisibility(View.VISIBLE);
 					mWideBrowserSelectAllCheckBox.setEnabled(false);
-				} else if (fm == mSmallBrowserFileManager) {
+				} else if (fmSource == mSmallBrowserFileManager) {
 					mSmallBrowserCurrentDirectoryText.setText(getString(R.string.loading));
 					mSmallBrowserFileAdapter.setFiles(null);
 					mSmallBrowserGoParentButton.setVisibility(View.GONE);
@@ -344,18 +345,34 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 				}
 				break;
 
-			case INITIAL_LIST_FILES:
-			case DID_LOAD_LIST_FILES:
-				if (fm == mWideBrowserFileManager) {
-					mWideBrowserCurrentDirectoryText.setText(fm.getCurrentPath());
-					mWideBrowserFileAdapter.setFiles(fm.getFiles());
+			case FileManagerEvent.INITIAL_LIST_FILES:
+				if (fmSource == mWideBrowserFileManager) {
+					mWideBrowserCurrentDirectoryText.setText(fmSource.getCurrentPath());
+					mWideBrowserFileAdapter.setFiles(null);
 					mWideBrowserLoadingProgress.setVisibility(View.GONE);
 					mWideBrowserGoParentButton.setVisibility(View.VISIBLE);
 					mWideBrowserGoParentButton.setEnabled(mWideBrowserFileManager.canGoParent());
-					mWideBrowserSelectAllCheckBox.setEnabled((fm.getFiles() != null) && !fm.getFiles().isEmpty());
-				} else if (fm == mSmallBrowserFileManager) {
-					mSmallBrowserCurrentDirectoryText.setText(fm.getCurrentPath());
-					mSmallBrowserFileAdapter.setFiles(fm.getFiles());
+					mWideBrowserSelectAllCheckBox.setEnabled(false);
+				} else if (fmSource == mSmallBrowserFileManager) {
+					mSmallBrowserCurrentDirectoryText.setText(fmSource.getCurrentPath());
+					mSmallBrowserFileAdapter.setFiles(null);
+					mSmallBrowserLoadingProgress.setVisibility(View.GONE);
+					mSmallBrowserGoParentButton.setVisibility(View.VISIBLE);
+					mSmallBrowserGoParentButton.setEnabled(mSmallBrowserFileManager.canGoParent());
+				}
+				break;
+
+			case FileManagerEvent.DID_LOAD_LIST_FILES:
+				if (fmEvent.getSource() == mWideBrowserFileManager) {
+					mWideBrowserCurrentDirectoryText.setText(fmSource.getCurrentPath());
+					mWideBrowserFileAdapter.setFiles(fmSource.getFiles());
+					mWideBrowserLoadingProgress.setVisibility(View.GONE);
+					mWideBrowserGoParentButton.setVisibility(View.VISIBLE);
+					mWideBrowserGoParentButton.setEnabled(mWideBrowserFileManager.canGoParent());
+					mWideBrowserSelectAllCheckBox.setEnabled((fmSource.getFiles() != null) && !fmSource.getFiles().isEmpty());
+				} else if (fmEvent.getSource() == mSmallBrowserFileManager) {
+					mSmallBrowserCurrentDirectoryText.setText(fmSource.getCurrentPath());
+					mSmallBrowserFileAdapter.setFiles(fmSource.getFiles());
 					mSmallBrowserLoadingProgress.setVisibility(View.GONE);
 					mSmallBrowserGoParentButton.setVisibility(View.VISIBLE);
 					mSmallBrowserGoParentButton.setEnabled(mSmallBrowserFileManager.canGoParent());

@@ -6,7 +6,7 @@ import java.util.List;
 public class BackgroundOperationResult {
 
 	private boolean mSuccess;
-	private List<FileManagerEvent> mReplacementEvents = new ArrayList<FileManagerEvent>();
+	private List<FileManagerEvent> mEvents = new ArrayList<FileManagerEvent>();
 
 	/**
 	 * @return the success
@@ -16,25 +16,25 @@ public class BackgroundOperationResult {
 	}
 
 	/**
-	 * @param success
-	 *            the success to set
+	 * @param mSuccess
+	 *            the mSuccess to set
 	 */
 	public void setSuccess(boolean success) {
 		this.mSuccess = success;
 	}
 
 	/**
-	 * @return the replacementEvents
+	 * @return the mEvents
 	 */
-	public List<FileManagerEvent> getReplacementEvents() {
-		return mReplacementEvents;
+	public List<FileManagerEvent> getEvents() {
+		return mEvents;
 	}
 
 	/**
-	 * @param mReplacementEvents
-	 *            the replacementEvents to set
+	 * @param mEvents
+	 *            the event to set
 	 */
-	public void addReplacementEvent(FileManagerEvent event) {
-		mReplacementEvents.add(event);
+	public void addEvent(FileManagerEvent event) {
+		mEvents.add(event);
 	}
 }

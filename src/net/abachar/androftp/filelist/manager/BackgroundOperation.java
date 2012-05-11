@@ -37,58 +37,56 @@ public class BackgroundOperation {
 
 	/** Init operation */
 	static {
+		CHANGE_TO_PARENT_DIRECTORY = new BackgroundOperation(CHANGE_TO_PARENT_DIRECTORY_ID, true);
+		CHANGE_WORKING_DIRECTORY = new BackgroundOperation(CHANGE_WORKING_DIRECTORY_ID, true);
+		CHANGE_ORDER_BY = new BackgroundOperation(CHANGE_ORDER_BY_ID, true);
+		REFRESH = new BackgroundOperation(REFRESH_ID, true);
+
 		// Connect operation
-		CONNECT = new BackgroundOperation();
-		CONNECT.mId = CONNECT_ID;
-		CONNECT.mBeginEvents.add(FileManagerEvent.WILL_CONNECT);
-		CONNECT.mEndEvents.add(FileManagerEvent.INITIAL_LIST_FILES);
-		CONNECT.mEndEvents.add(FileManagerEvent.DID_CONNECT);
+		CONNECT = new BackgroundOperation(CONNECT_ID, false);
+		CONNECT.addBeginEvents(FileManagerEvent.WILL_CONNECT);
+		CONNECT.addEndEvents(FileManagerEvent.INITIAL_LIST_FILES);
+		CONNECT.addEndEvents(FileManagerEvent.DID_CONNECT);
 
-		// Change to parent directory operation
-		CHANGE_TO_PARENT_DIRECTORY = new BackgroundOperation();
-		CHANGE_TO_PARENT_DIRECTORY.mId = CHANGE_TO_PARENT_DIRECTORY_ID;
-		CHANGE_TO_PARENT_DIRECTORY.mBeginEvents.add(FileManagerEvent.WILL_LOAD_LIST_FILES);
-		CHANGE_TO_PARENT_DIRECTORY.mEndEvents.add(FileManagerEvent.DID_LOAD_LIST_FILES);
-
-		// Change working directory operation
-		CHANGE_WORKING_DIRECTORY = new BackgroundOperation();
-		CHANGE_WORKING_DIRECTORY.mId = CHANGE_WORKING_DIRECTORY_ID;
-		CHANGE_WORKING_DIRECTORY.mBeginEvents.add(FileManagerEvent.WILL_LOAD_LIST_FILES);
-		CHANGE_WORKING_DIRECTORY.mEndEvents.add(FileManagerEvent.DID_LOAD_LIST_FILES);
-
-		// Change files order
-		CHANGE_ORDER_BY = new BackgroundOperation();
-		CHANGE_ORDER_BY.mId = CHANGE_ORDER_BY_ID;
-		CHANGE_ORDER_BY.mBeginEvents.add(FileManagerEvent.WILL_LOAD_LIST_FILES);
-		CHANGE_ORDER_BY.mEndEvents.add(FileManagerEvent.DID_LOAD_LIST_FILES);
-
-		// Delete list of files
-		DELETE_FILES = new BackgroundOperation();
-		DELETE_FILES.mId = DELETE_FILES_ID;
-		DELETE_FILES.mBeginEvents.add(FileManagerEvent.WILL_LOAD_LIST_FILES);
-		DELETE_FILES.mEndEvents.add(FileManagerEvent.DID_LOAD_LIST_FILES);
+		// Delete files
+		DELETE_FILES = new BackgroundOperation(DELETE_FILES_ID, true);
+		DELETE_FILES.addEndEvents(FileManagerEvent.DELETE_FILE_SUCCESS);
 
 		// Create new folder
-		CREATE_NEW_FOLDER = new BackgroundOperation();
-		CREATE_NEW_FOLDER.mId = CREATE_NEW_FOLDER_ID;
-		CREATE_NEW_FOLDER.mBeginEvents.add(FileManagerEvent.WILL_LOAD_LIST_FILES);
-		CREATE_NEW_FOLDER.mEndEvents.add(FileManagerEvent.DID_LOAD_LIST_FILES);
+		CREATE_NEW_FOLDER = new BackgroundOperation(DELETE_FILES_ID, true);
+		CREATE_NEW_FOLDER.addEndEvents(FileManagerEvent.CREATE_FOLDER_SUCCESS);
 
 		// Rename file
-		RENAME_FILE = new BackgroundOperation();
-		RENAME_FILE.mId = RENAME_FILE_ID;
-		RENAME_FILE.mBeginEvents.add(FileManagerEvent.WILL_LOAD_LIST_FILES);
-		RENAME_FILE.mEndEvents.add(FileManagerEvent.DID_LOAD_LIST_FILES);
-
-		// Refresh list files
-		REFRESH = new BackgroundOperation();
-		REFRESH.mId = REFRESH_ID;
-		REFRESH.mBeginEvents.add(FileManagerEvent.WILL_LOAD_LIST_FILES);
-		REFRESH.mEndEvents.add(FileManagerEvent.DID_LOAD_LIST_FILES);
+		RENAME_FILE = new BackgroundOperation(RENAME_FILE_ID, true);
+		RENAME_FILE.addEndEvents(FileManagerEvent.RENAME_FILE_SUCCESS);
 	}
 
-	private BackgroundOperation() {
+	/**
+	 * 
+	 * @param id
+	 */
+	private BackgroundOperation(int id, boolean addLoadListFilesEvents) {
+		mId = id;
+		if (addLoadListFilesEvents) {
+			addBeginEvents(FileManagerEvent.WILL_LOAD_LIST_FILES);
+			addEndEvents(FileManagerEvent.DID_LOAD_LIST_FILES);
+		}
+	}
 
+	/**
+	 * 
+	 * @param initialListFiles
+	 */
+	private void addBeginEvents(int event) {
+		mBeginEvents.add(new FileManagerEvent(event));
+	}
+
+	/**
+	 * 
+	 * @param initialListFiles
+	 */
+	private void addEndEvents(int event) {
+		mEndEvents.add(new FileManagerEvent(event));
 	}
 
 	/**

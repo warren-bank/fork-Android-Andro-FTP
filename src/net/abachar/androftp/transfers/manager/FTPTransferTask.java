@@ -9,14 +9,13 @@ import java.util.List;
 
 import net.abachar.androftp.MainApplication;
 import net.abachar.androftp.filelist.manager.FTPFileManager;
-import net.abachar.androftp.servers.Logontype;
+import net.abachar.androftp.filelist.manager.FileManagerException;
 
 import org.apache.commons.io.input.CountingInputStream;
 import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.commons.net.PrintCommandListener;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPReply;
 
 /**
  * 
@@ -71,9 +70,12 @@ public class FTPTransferTask extends TransferTask {
 				connect();
 			}
 
-			// if (binaryTransfer) {
-			mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
-			// }
+			// File type
+			if (ASCII_FILE.isAsciiFile(mCurrentTransfer.getName())) {
+				mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
+			} else {
+				mFTPClient.setFileType(FTP.ASCII_FILE_TYPE);
+			}
 
 			// Go to directory
 			if (!mFTPClient.printWorkingDirectory().equals(mCurrentTransfer.getSourcePath())) {
@@ -120,9 +122,12 @@ public class FTPTransferTask extends TransferTask {
 				connect();
 			}
 
-			// if (binaryTransfer) {
-			mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
-			// }
+			// File type
+			if (ASCII_FILE.isAsciiFile(mCurrentTransfer.getName())) {
+				mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
+			} else {
+				mFTPClient.setFileType(FTP.ASCII_FILE_TYPE);
+			}
 
 			// Open local file
 			FileInputStream fis = new FileInputStream(mCurrentTransfer.getFullSourcePath());
@@ -166,24 +171,47 @@ public class FTPTransferTask extends TransferTask {
 
 		FTPFileManager fileManager = (FTPFileManager) MainApplication.getInstance().getServerFileManager();
 
-		// Connect to server
-		mFTPClient.connect(fileManager.getHost(), fileManager.getPort());
+		// Get connection
+		try {
+			mFTPClient = fileManager.getConnection();
+		} catch (FileManagerException e) {
+			e.printStackTrace();
+		}
+	}
 
-		// Check the reply code to verify success.
-		int reply = mFTPClient.getReplyCode();
-		if (!FTPReply.isPositiveCompletion(reply)) {
-			return;
+	/**
+	 * Ascii files extensions : TODO Move to net.abachar.androftp.util.FileType
+	 */
+	static enum ASCII_FILE {
+		AM("am"), ASP("asp"), BAT("bat"), C("c"), CFM("cfm"), CGI("cgi"), CONF("conf"), CPP("cpp"), CSS("css"), DHTML("dhtml"), DIZ("diz"), H("h"), HPP("hpp"), HTM("htm"), HTML("html"), IN("in"), INC(
+				"inc"), JAVA("java"), JS("js"), JSP("jsp"), LUA("lua"), M4("m4"), MAK("mak"), MD5("md5"), NFO("nfo"), NSI("nsi"), PAS("pas"), PATCH("patch"), PHP("php"), PHTML("phtml"), PL("pl"), PO(
+				"po"), PY("py"), QMAIL("qmail"), SH("sh"), SHTML("shtml"), SQL("sql"), SVG("svg"), TCL("tcl"), TPL("tpl"), TXT("txt"), VBS("vbs"), XHTML("xhtml"), XML("xml"), XRC("xrc");
+
+		/** */
+		String value;
+
+		/** */
+		private ASCII_FILE(String value) {
+			this.value = value;
 		}
 
-		if (fileManager.getLogontype() == Logontype.NORMAL) {
-			if (!mFTPClient.login(fileManager.getUsername(), fileManager.getPassword())) {
-				mFTPClient.logout();
-				return;
+		/** */
+		public static boolean isAsciiFile(String fileName) {
+
+			// Get extension
+			int lastDot = fileName.lastIndexOf('.');
+			if (lastDot >= 0) {
+
+				// By extension
+				String fext = fileName.substring(lastDot + 1).toLowerCase();
+				for (ASCII_FILE af : ASCII_FILE.values()) {
+					if (fext.equals(af.value)) {
+						return true;
+					}
+				}
 			}
-		}
 
-		// Use passive mode as default because most of us are
-		// behind firewalls these days.
-		mFTPClient.enterLocalPassiveMode();
+			return false;
+		}
 	}
 }

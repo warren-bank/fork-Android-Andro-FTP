@@ -2,7 +2,6 @@ package net.abachar.androftp;
 
 import net.abachar.androftp.filelist.LocalManagerFragment;
 import net.abachar.androftp.filelist.ServerManagerFragment;
-import net.abachar.androftp.filelist.manager.FileManager;
 import net.abachar.androftp.filelist.manager.FileManagerEvent;
 import net.abachar.androftp.filelist.manager.FileManagerListener;
 import net.abachar.androftp.servers.Logontype;
@@ -64,6 +63,9 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 			// Setup selected tab
 			mSelectedTab = TabId.LOCAL_MANAGER;
 		}
+
+		// Settings
+		bundle.putInt("server.timeout", 20 * 1000);
 
 		// Instanciate managers
 		MainApplication.getInstance().initManagers(this, bundle);
@@ -145,30 +147,29 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 	}
 
 	/**
-	 * @see net.abachar.androftp.filelist.manager.FileManagerListener#onFileManagerEvent(net.abachar.androftp.filelist.manager.FileManager,
-	 *      net.abachar.androftp.filelist.manager.FileManagerEvent)
+	 * @see net.abachar.androftp.filelist.manager.FileManagerListener#onFileManagerEvent(net.abachar.androftp.filelist.manager.FileManagerEvent)
 	 */
 	@Override
-	public void onFileManagerEvent(FileManager fm, FileManagerEvent msg) {
+	public void onFileManagerEvent(FileManagerEvent fmEvent) {
 
-		switch (msg) {
-			case WILL_CONNECT:
+		switch (fmEvent.getEvent()) {
+			case FileManagerEvent.WILL_CONNECT:
 				if (!mProgressDialog.isShowing()) {
 					mProgressDialog.show();
 				}
 				break;
 
-			case DID_CONNECT:
+			case FileManagerEvent.DID_CONNECT:
 				if (MainApplication.getInstance().isAllConnected()) {
 					mProgressDialog.dismiss();
 				}
 				break;
 
-			case ERROR_CONNECTION:
+			case FileManagerEvent.ERR_CONNECTION:
 				new AlertDialog.Builder(this).setMessage("Erreur de connexion :(").setCancelable(true).setNeutralButton("Close", null).create().show();
 				break;
 
-			case LOST_CONNECTION:
+			case FileManagerEvent.ERR_LOST_CONNECTION:
 				new AlertDialog.Builder(this).setMessage("Connexion perdu :(").setCancelable(true).setNeutralButton("Close", null).create().show();
 				break;
 		}

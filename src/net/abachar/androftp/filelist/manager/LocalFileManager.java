@@ -5,7 +5,8 @@ import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import android.content.Context;
+import net.abachar.androftp.util.FileType;
+
 import android.os.Bundle;
 import android.os.Environment;
 
@@ -14,13 +15,6 @@ import android.os.Environment;
  * @author abachar
  */
 public class LocalFileManager extends AbstractFileManager {
-
-	/**
-	 * Default constructor
-	 */
-	public LocalFileManager(Context context) {
-		super(context);
-	}
 
 	/**
 	 * @see net.abachar.androftp.filelist.manager.FileManager#init(android.os.Bundle)
@@ -106,12 +100,14 @@ public class LocalFileManager extends AbstractFileManager {
 		for (FileEntry file : files) {
 			File f = new File(file.getAbsolutePath());
 			if (!f.delete()) {
-				// Toast.makeText(mContext, R.string.err_delete_file,
-				// Toast.LENGTH_SHORT).show(); Exception
+				if (file.isFolder()) {
+					throw new FileManagerException(FileManagerEvent.ERR_DELETE_FOLDER);
+				} else {
+					throw new FileManagerException(FileManagerEvent.ERR_DELETE_FILE);
+				}
 			}
 		}
 
-		// Refresh file list
 		loadFiles();
 	}
 
@@ -123,17 +119,10 @@ public class LocalFileManager extends AbstractFileManager {
 		String newFolder = dir.getAbsolutePath();
 
 		File folder = new File(newFolder);
-		if (folder.exists()) {
-			// Toast.makeText(mContext, R.string.err_folder_already_exists,
-			// Toast.LENGTH_SHORT).show(); Exception
+		if (folder.mkdir()) {
+			loadFiles();
 		} else {
-			if (folder.mkdir()) {
-				// Refresh file list
-				loadFiles();
-			} else {
-				// Toast.makeText(mContext, R.string.err_create_folder,
-				// Toast.LENGTH_SHORT).show(); Exception
-			}
+			throw new FileManagerException(FileManagerEvent.ERR_CREATE_FOLDER);
 		}
 	}
 
@@ -142,7 +131,6 @@ public class LocalFileManager extends AbstractFileManager {
 	 */
 	@Override
 	protected void doRefresh() throws FileManagerException {
-		// Refresh file list
 		loadFiles();
 	}
 
@@ -155,17 +143,14 @@ public class LocalFileManager extends AbstractFileManager {
 
 		// New file
 		File nfile = new File(newFile.getAbsolutePath());
-		if (nfile.exists()) {
-			// Toast.makeText(mContext, R.string.err_file_already_exists,
-			// Toast.LENGTH_SHORT).show(); Exception
+		File oldFile = new File(file.getAbsolutePath());
+		if (oldFile.renameTo(nfile)) {
+			loadFiles();
 		} else {
-			File oldFile = new File(file.getAbsolutePath());
-			if (oldFile.renameTo(nfile)) {
-				// Refresh file list
-				loadFiles();
+			if (file.isFolder()) {
+				throw new FileManagerException(FileManagerEvent.ERR_RENAME_FOLDER);
 			} else {
-				// Toast.makeText(mContext, R.string.err_rename_file,
-				// Toast.LENGTH_SHORT).show(); Exception
+				throw new FileManagerException(FileManagerEvent.ERR_RENAME_FILE);
 			}
 		}
 	}

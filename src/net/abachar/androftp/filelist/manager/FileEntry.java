@@ -1,5 +1,7 @@
 package net.abachar.androftp.filelist.manager;
 
+import net.abachar.androftp.util.FileType;
+
 /**
  * 
  * @author abachar

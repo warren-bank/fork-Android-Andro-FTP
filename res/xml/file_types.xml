@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<file-types>
+    
+    <!-- Character-based files -->
+    <file-type>
+        <code>TEXT</code>
+        <extension>txt</extension>
+        <icon>ic_file_txt</icon>
+        <ascii>true</ascii>
+    </file-type>
+
+    <!-- Documents -->
+    <file-type>
+        <code>DOC</code>
+        <extension>doc</extension>
+        <icon>ic_file_doc</icon>
+    </file-type>
+    <file-type>
+        <code>PPT</code>
+        <extension>ppt</extension>
+        <icon>ic_file_ppt</icon>
+    </file-type>
+    <file-type>
+        <code>XLS</code>
+        <extension>xls</extension>
+        <icon>ic_file_xls</icon>
+    </file-type>
+    <file-type>
+        <code>PDF</code>
+        <extension>pdf</extension>
+        <icon>ic_file_pdf</icon>
+    </file-type>
+
+    <!-- Images -->
+    <file-type>
+        <code>JPEG</code>
+        <extension>jpg</extension>
+        <icon>ic_file_image</icon>
+    </file-type>
+    <file-type>
+        <code>GIF</code>
+        <extension>gif</extension>
+        <icon>ic_file_image</icon>
+    </file-type>
+    <file-type>
+        <code>PNG</code>
+        <extension>png</extension>
+        <icon>ic_file_image</icon>
+    </file-type>
+    
+    <!-- Audio -->
+    <file-type>
+        <code>MP3</code>
+        <extension>mp3</extension>
+        <icon>ic_file_mp3</icon>
+    </file-type>
+    
+    <!-- Video -->
+    <file-type>
+        <code>AVI</code>
+        <extension>avi</extension>
+        <icon>ic_file_video</icon>
+    </file-type>
+    <file-type>
+        <code>MP4</code>
+        <extension>mp4</extension>
+        <icon>ic_file_mp4</icon>
+    </file-type>
+
+    <!-- ASCII -->
+    <file-type>
+        <code>AM</code>
+        <extension>am</extension>
+        <ascii>true</ascii>
+    </file-type>
+    <!--
+    
+    		AM("am"), ASP("asp"), BAT("bat"), C("c"), CFM("cfm"), CGI("cgi"), CONF("conf"), CPP("cpp"), CSS("css"), DHTML("dhtml"), DIZ("diz"), H("h"), HPP("hpp"), HTM("htm"), HTML("html"), IN("in"), INC(
+				"inc"), JAVA("java"), JS("js"), JSP("jsp"), LUA("lua"), M4("m4"), MAK("mak"), MD5("md5"), NFO("nfo"), NSI("nsi"), PAS("pas"), PATCH("patch"), PHP("php"), PHTML("phtml"), PL("pl"), PO(
+				"po"), PY("py"), QMAIL("qmail"), SH("sh"), SHTML("shtml"), SQL("sql"), SVG("svg"), TCL("tcl"), TPL("tpl"), TXT("txt"), VBS("vbs"), XHTML("xhtml"), XML("xml"), XRC("xrc");
+    -->
+
+</file-types>
