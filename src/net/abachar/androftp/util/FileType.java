@@ -59,14 +59,25 @@ public class FileType {
 		Resources resources = MainApplication.getInstance().getResources();
 
 		// Load icon Id
-		int iconId = resources.getIdentifier(icon, "drawable", "net.abachar.androftp");
+		int iconId = R.drawable.ic_file_unknown;
+		if (icon != null) {
+			iconId = resources.getIdentifier(icon, "drawable", "net.abachar.androftp");
+		}
 
 		// Load format id
-		int formatId = resources.getIdentifier(format, "string", "net.abachar.androftp");
+		int formatId = R.string.file_type_format_unknown;
+		if (format != null) {
+			formatId = resources.getIdentifier(format, "string", "net.abachar.androftp");
+		}
+
+		// String icon, String format, String ascii
+		boolean isAscii = false;
+		if (ascii != null) {
+			isAscii = Boolean.parseBoolean(ascii);
+		}
 
 		// Add new file type
-		FileType ft = new FileType(code, order, extension, iconId, formatId, Boolean.parseBoolean(ascii));
-		fileTypes.put(extension, ft);
+		fileTypes.put(extension, new FileType(code, order, extension, iconId, formatId, isAscii));
 	}
 
 	/**
