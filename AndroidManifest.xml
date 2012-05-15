@@ -32,7 +32,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".AndroFTPPreferenceActivity"
+            android:name=".PreferenceActivity"
             android:label="@string/app_settings_name"
             android:screenOrientation="sensorLandscape" >
         </activity>

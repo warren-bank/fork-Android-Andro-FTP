@@ -46,7 +46,7 @@ public class LocalFileManager extends AbstractFileManager {
 	/**
 	 * @see net.abachar.androftp.filelist.manager.FileManager#doConnect()
 	 */
-	protected void doConnect() {
+	protected void doConnect(BackgroundOperationListener listener) {
 
 		// Can read curent directory ?
 		File currentDir = new File(mCurrentPath);
@@ -62,7 +62,7 @@ public class LocalFileManager extends AbstractFileManager {
 	 * @see net.abachar.androftp.filelist.manager.FileManager#doChangeToParentDirectory()
 	 */
 	@Override
-	protected void doChangeToParentDirectory() throws FileManagerException {
+	protected void doChangeToParentDirectory(BackgroundOperationListener listener) throws FileManagerException {
 
 		// Open current directory
 		File currentDir = new File(mCurrentPath);
@@ -79,7 +79,7 @@ public class LocalFileManager extends AbstractFileManager {
 	 * @see net.abachar.androftp.filelist.manager.FileManager#doChangeWorkingDirectory(net.abachar.androftp.filelist.manager.FileEntry)
 	 */
 	@Override
-	protected void doChangeWorkingDirectory(FileEntry dir) throws FileManagerException {
+	protected void doChangeWorkingDirectory(BackgroundOperationListener listener, FileEntry dir) throws FileManagerException {
 
 		// Change working directory
 		File d = new File(dir.getAbsolutePath());
@@ -96,7 +96,7 @@ public class LocalFileManager extends AbstractFileManager {
 	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doDeleteFiles(net.abachar.androftp.filelist.manager.FileEntry[])
 	 */
 	@Override
-	protected void doDeleteFiles(FileEntry[] files) throws FileManagerException {
+	protected void doDeleteFiles(BackgroundOperationListener listener, FileEntry[] files) throws FileManagerException {
 		for (FileEntry file : files) {
 			File f = new File(file.getAbsolutePath());
 			if (!f.delete()) {
@@ -115,7 +115,7 @@ public class LocalFileManager extends AbstractFileManager {
 	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doCreateNewfolder(net.abachar.androftp.filelist.manager.FileEntry)
 	 */
 	@Override
-	protected void doCreateNewfolder(FileEntry dir) throws FileManagerException {
+	protected void doCreateNewfolder(BackgroundOperationListener listener, FileEntry dir) throws FileManagerException {
 		String newFolder = dir.getAbsolutePath();
 
 		File folder = new File(newFolder);
@@ -130,7 +130,7 @@ public class LocalFileManager extends AbstractFileManager {
 	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doRefresh()
 	 */
 	@Override
-	protected void doRefresh() throws FileManagerException {
+	protected void doRefresh(BackgroundOperationListener listener) throws FileManagerException {
 		loadFiles();
 	}
 
@@ -139,7 +139,7 @@ public class LocalFileManager extends AbstractFileManager {
 	 *      net.abachar.androftp.filelist.manager.FileEntry)
 	 */
 	@Override
-	protected void doRenameFile(FileEntry file, FileEntry newFile) throws FileManagerException {
+	protected void doRenameFile(BackgroundOperationListener listener, FileEntry file, FileEntry newFile) throws FileManagerException {
 
 		// New file
 		File nfile = new File(newFile.getAbsolutePath());

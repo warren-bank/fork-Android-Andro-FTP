@@ -3,8 +3,11 @@ package net.abachar.androftp.transfers.manager;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.os.Bundle;
+
 import net.abachar.androftp.MainApplication;
 import net.abachar.androftp.filelist.manager.FileEntry;
+import net.abachar.androftp.util.Constants;
 
 /**
  * 
@@ -20,7 +23,7 @@ public class TransferManager implements TransferTaskProgressListener {
 	private final List<Transfer> mTransferList;
 
 	/** */
-	private final int mMaxTransferTaskCount = 2;
+	private int mMaxTransferTaskCount;
 	private final List<TransferTask> mTransferTasks;
 
 	/**
@@ -30,6 +33,13 @@ public class TransferManager implements TransferTaskProgressListener {
 		mTransferSequense = 0;
 		mTransferList = new ArrayList<Transfer>();
 		mTransferTasks = new ArrayList<TransferTask>();
+	}
+
+	/**
+	 *
+	 */
+	public void init(Bundle bundle) {
+		mMaxTransferTaskCount = bundle.getInt(Constants.PREFERENCE_MAX_SIMULTANEOUS_TRANSFERS);
 	}
 
 	/**
@@ -187,5 +197,13 @@ public class TransferManager implements TransferTaskProgressListener {
 		if ((mTransferList != null) && !mTransferList.isEmpty()) {
 			listener.onUpdateTransfer();
 		}
+	}
+
+	/**
+	 * @param mMaxTransferTaskCount
+	 *            the mMaxTransferTaskCount to set
+	 */
+	public void setMaxTransferTaskCount(int mMaxTransferTaskCount) {
+		this.mMaxTransferTaskCount = mMaxTransferTaskCount;
 	}
 }

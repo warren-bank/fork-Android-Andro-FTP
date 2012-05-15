@@ -346,31 +346,15 @@ public abstract class AbstractManagerFragment extends Fragment implements FileMa
 				break;
 
 			case FileManagerEvent.INITIAL_LIST_FILES:
-				if (fmSource == mWideBrowserFileManager) {
-					mWideBrowserCurrentDirectoryText.setText(fmSource.getCurrentPath());
-					mWideBrowserFileAdapter.setFiles(null);
-					mWideBrowserLoadingProgress.setVisibility(View.GONE);
-					mWideBrowserGoParentButton.setVisibility(View.VISIBLE);
-					mWideBrowserGoParentButton.setEnabled(mWideBrowserFileManager.canGoParent());
-					mWideBrowserSelectAllCheckBox.setEnabled(false);
-				} else if (fmSource == mSmallBrowserFileManager) {
-					mSmallBrowserCurrentDirectoryText.setText(fmSource.getCurrentPath());
-					mSmallBrowserFileAdapter.setFiles(null);
-					mSmallBrowserLoadingProgress.setVisibility(View.GONE);
-					mSmallBrowserGoParentButton.setVisibility(View.VISIBLE);
-					mSmallBrowserGoParentButton.setEnabled(mSmallBrowserFileManager.canGoParent());
-				}
-				break;
-
 			case FileManagerEvent.DID_LOAD_LIST_FILES:
-				if (fmEvent.getSource() == mWideBrowserFileManager) {
+				if (fmSource == mWideBrowserFileManager) {
 					mWideBrowserCurrentDirectoryText.setText(fmSource.getCurrentPath());
 					mWideBrowserFileAdapter.setFiles(fmSource.getFiles());
 					mWideBrowserLoadingProgress.setVisibility(View.GONE);
 					mWideBrowserGoParentButton.setVisibility(View.VISIBLE);
 					mWideBrowserGoParentButton.setEnabled(mWideBrowserFileManager.canGoParent());
 					mWideBrowserSelectAllCheckBox.setEnabled((fmSource.getFiles() != null) && !fmSource.getFiles().isEmpty());
-				} else if (fmEvent.getSource() == mSmallBrowserFileManager) {
+				} else if (fmSource == mSmallBrowserFileManager) {
 					mSmallBrowserCurrentDirectoryText.setText(fmSource.getCurrentPath());
 					mSmallBrowserFileAdapter.setFiles(fmSource.getFiles());
 					mSmallBrowserLoadingProgress.setVisibility(View.GONE);

@@ -4,20 +4,29 @@
     <PreferenceCategory android:title="Connection" >
         <EditTextPreference
             android:defaultValue="20"
-            android:title=" Timeout in seconds" />
+            android:key="timeout_preference"
+            android:title="Timeout in seconds" />
         <EditTextPreference
             android:defaultValue="2"
+            android:key="max_nbr_retries_preference"
             android:title="Maximum number of retries" />
         <EditTextPreference
             android:defaultValue="5"
+            android:key="delay_between_failed_login_preference"
             android:title="Delay between failed login attempts" />
 
-        <ListPreference android:title="Transfer mode" android:entryValues="@array/pref_transfer_mode_values" android:entries="@array/pref_transfer_mode_entries"/>
+        <ListPreference
+            android:defaultValue="P"
+            android:entries="@array/pref_transfer_mode_entries"
+            android:entryValues="@array/pref_transfer_mode_values"
+            android:key="transfer_mode_preference"
+            android:title="Transfer mode" />
     </PreferenceCategory>
     <PreferenceCategory android:title="Transfers" >
         <EditTextPreference
             android:defaultValue="2"
-            android:summary="1-10"
+            android:key="max_simultaneous_transfers_preference"
+            android:summary="1-5"
             android:title="Maximum simultaneous transfers" />
     </PreferenceCategory>
 

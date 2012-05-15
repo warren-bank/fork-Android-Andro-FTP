@@ -5,17 +5,17 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-
 import net.abachar.androftp.servers.Logontype;
 import net.abachar.androftp.servers.Server;
 import net.abachar.androftp.servers.ServerDataSource;
 import net.abachar.androftp.util.FileType;
+
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.XmlResourceParser;
 import android.os.Bundle;
 import android.view.View;
@@ -34,9 +34,6 @@ import android.widget.Toast;
  * @author abachar
  */
 public class ServerManagerActivity extends Activity implements OnClickListener, OnItemSelectedListener {
-
-	/** Shared preferences */
-	private SharedPreferences mSharedPreferences;
 
 	/** Server list */
 	private ServerDataSource mDataSource;
@@ -71,9 +68,6 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 		// Use server_manager view
 		setContentView(R.layout.server_manager);
 
-		// Load shared preferences
-		mSharedPreferences = getSharedPreferences(MainApplication.SHARED_PREFERENCES_NAME, 0);
-
 		// Initialize user interface
 		initUI();
 
@@ -91,7 +85,7 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 		mServerSpinner.setAdapter(mServerAdapter);
 
 		// Get last used server
-		fillServerAdapter(mSharedPreferences.getLong("lastSelectedServer", -1));
+		fillServerAdapter(MainApplication.getInstance().getLastSelectedServer());
 	}
 
 	/**
@@ -248,9 +242,7 @@ public class ServerManagerActivity extends Activity implements OnClickListener, 
 		Server server = mServerList.get(mServerSpinner.getSelectedItemPosition() - 1);
 
 		// Save
-		SharedPreferences.Editor editor = mSharedPreferences.edit();
-		editor.putLong("lastSelectedServer", server.getId());
-		editor.commit();
+		MainApplication.getInstance().saveLastSelectedServer(server.getId());
 
 		// Start activity
 		intent.putExtra("host", server.getHost());

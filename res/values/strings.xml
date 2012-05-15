@@ -7,8 +7,8 @@
     <string name="pending">Pending…</string>
 
     <!-- Connect progress dialog -->
-    <string name="connect_progress_title">Connection</string>
-    <string name="connect_progress_message">Loading…</string>
+    <string name="connecting_dialog_title">Connection</string>
+    <string name="connecting_dialog_message">Connecting to %s&#8230;</string>
 
     <!-- Default values -->
     <string name="default_port">21</string>
@@ -73,6 +73,8 @@
     <string name="err_folder_already_exists">Folder already exists</string>
     <string name="err_create_folder">Unknown error creating folder</string>
     <string name="err_delete_file">Error delete folder</string>
+    <string name="err_value_must_be_integer">Value must be an integer</string>
+    <string name="err_value_must_be_integer_between_1_5">Value must be an integer between 1 and 5</string>
 
     <!-- File type description -->
     <string name="file_type_format_folder">Folder</string>

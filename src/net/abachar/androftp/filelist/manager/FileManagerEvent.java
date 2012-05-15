@@ -12,26 +12,27 @@ public class FileManagerEvent {
 	public final static int ERR_CONNECTION = 0x02;
 	public final static int ERR_LOST_CONNECTION = 0x03;
 	public final static int INITIAL_LIST_FILES = 0x04;
+	public final static int LOG_CONNECT = 0x05;
 
 	/** List files changed */
-	public final static int WILL_LOAD_LIST_FILES = 0x05;
-	public final static int DID_LOAD_LIST_FILES = 0x06;
+	public final static int WILL_LOAD_LIST_FILES = 0x10;
+	public final static int DID_LOAD_LIST_FILES = 0x11;
 
 	/** File management messages */
-	public final static int CREATE_FOLDER_SUCCESS = 0x07;		//
-	public final static int DELETE_FILE_SUCCESS = 0x08;			//
-	public final static int DELETE_FOLDER_SUCCESS = 0x09;
-	public final static int RENAME_FILE_SUCCESS = 0x10;			//
-	public final static int RENAME_FOLDER_SUCCESS = 0x11;
+	public final static int CREATE_FOLDER_SUCCESS = 0x20; //
+	public final static int DELETE_FILE_SUCCESS = 0x21; //
+	public final static int DELETE_FOLDER_SUCCESS = 0x22;
+	public final static int RENAME_FILE_SUCCESS = 0x23; //
+	public final static int RENAME_FOLDER_SUCCESS = 0x24;
 
 	/** File management errors */
-	public final static int ERR_CREATE_FOLDER = 0x12;			//
-	public final static int ERR_DELETE_FILE = 0x13;				//
-	public final static int ERR_DELETE_FOLDER = 0x14;			//
-	public final static int ERR_RENAME_FILE = 0x15;				//
-	public final static int ERR_RENAME_FOLDER = 0x16;			//
-	public final static int ERR_FILE_ALREADY_EXISTS = 0x17;		//
-	public final static int ERR_FOLDER_ALREADY_EXISTS = 0x18;	//
+	public final static int ERR_CREATE_FOLDER = 0x30; //
+	public final static int ERR_DELETE_FILE = 0x31; //
+	public final static int ERR_DELETE_FOLDER = 0x32; //
+	public final static int ERR_RENAME_FILE = 0x33; //
+	public final static int ERR_RENAME_FOLDER = 0x34; //
+	public final static int ERR_FILE_ALREADY_EXISTS = 0x35; //
+	public final static int ERR_FOLDER_ALREADY_EXISTS = 0x36; //
 
 	/** */
 	private FileManager mSource;
@@ -39,9 +40,18 @@ public class FileManagerEvent {
 	/** Evenement */
 	private int mEvent;
 
+	/** Message details */
+	private String mMessage;
+
 	/** */
 	public FileManagerEvent(int event) {
+		this(event, null);
+	}
+
+	/** */
+	public FileManagerEvent(int event, String message) {
 		mEvent = event;
+		mMessage = message;
 	}
 
 	/**
@@ -64,5 +74,20 @@ public class FileManagerEvent {
 	 */
 	public int getEvent() {
 		return mEvent;
+	}
+
+	/**
+	 * @return the mMessage
+	 */
+	public String getMessage() {
+		return mMessage;
+	}
+
+	/**
+	 * @param mMessage
+	 *            the mMessage to set
+	 */
+	public void setMessage(String mMessage) {
+		this.mMessage = mMessage;
 	}
 }

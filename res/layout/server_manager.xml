@@ -176,12 +176,14 @@
 				android:layout_width="100dip"
 				android:layout_height="wrap_content"
 				android:text="@string/server_manager_label_password" />
-
+
 			<EditText
-				android:id="@+id/txt_server_password"
-				android:layout_width="0dip"
-				android:layout_height="wrap_content"
-				android:layout_weight="1"/>
+			    android:id="@+id/txt_server_password"
+			    android:layout_width="0dip"
+			    android:layout_height="wrap_content"
+			    android:layout_weight="1"
+			    android:inputType="textPassword" />
+
 		</LinearLayout>
 
 		<LinearLayout

@@ -12,7 +12,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -28,7 +27,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 	private TabId mSelectedTab;
 
 	/** Connexion progress dialog */
-	private ProgressDialog mProgressDialog;
+	private ConnectingDialog mConnectingDialog;
 
 	/** Menus */
 	protected MenuItem mSettingMenu;
@@ -39,9 +38,13 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		// Intent extars
+		Bundle intentExtras = getIntent().getExtras();
 
-		// Show waiting dialog
-		mProgressDialog = ProgressDialog.show(this, getString(R.string.connect_progress_title), getString(R.string.connect_progress_message), true, false);
+		// Connecting Dialog
+		mConnectingDialog = new ConnectingDialog(this);
+		mConnectingDialog.setServerName(intentExtras.getString("host"));
 
 		// Create map properties
 		final Bundle bundle = new Bundle();
@@ -50,7 +53,6 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 		} else {
 
 			// Server data
-			Bundle intentExtras = getIntent().getExtras();
 			bundle.putString("server.host", intentExtras.getString("host"));
 			bundle.putInt("server.port", intentExtras.getInt("port"));
 			Logontype logontype = (Logontype) intentExtras.get("logontype");
@@ -154,14 +156,20 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 
 		switch (fmEvent.getEvent()) {
 			case FileManagerEvent.WILL_CONNECT:
-				if (!mProgressDialog.isShowing()) {
-					mProgressDialog.show();
+				if (!mConnectingDialog.isShowing()) {
+					mConnectingDialog.show();
 				}
 				break;
 
 			case FileManagerEvent.DID_CONNECT:
 				if (MainApplication.getInstance().isAllConnected()) {
-					mProgressDialog.dismiss();
+					mConnectingDialog.dismiss();
+				}
+				break;
+
+			case FileManagerEvent.LOG_CONNECT:
+				if (mConnectingDialog.isShowing()) {
+					mConnectingDialog.addLog(fmEvent.getMessage());
 				}
 				break;
 
@@ -194,7 +202,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 	public boolean onOptionsItemSelected(MenuItem item) {
 
 		if (mSettingMenu == item) {
-			startActivityForResult(new Intent(this, AndroFTPPreferenceActivity.class), 1);
+			startActivityForResult(new Intent(this, PreferenceActivity.class), 1);
 			return true;
 		}
 

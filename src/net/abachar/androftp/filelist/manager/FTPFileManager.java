@@ -7,8 +7,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import net.abachar.androftp.servers.Logontype;
+import net.abachar.androftp.util.Constants;
 import net.abachar.androftp.util.FileType;
 
+import org.apache.commons.net.ProtocolCommandEvent;
+import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPConnectionClosedException;
 import org.apache.commons.net.ftp.FTPFile;
@@ -33,6 +36,8 @@ public class FTPFileManager extends AbstractFileManager {
 	private String mUsername;
 	private String mPassword;
 	private int mTimeout;
+	private int mMaxNbrRetires;
+	private int mDelayBetweenFailedLogin;
 
 	/**
 	 * @see net.abachar.androftp.filelist.manager.FileManager#init(android.os.Bundle)
@@ -58,7 +63,9 @@ public class FTPFileManager extends AbstractFileManager {
 		}
 
 		// Time out
-		mTimeout = bundle.getInt("server.timeout");
+		mTimeout = bundle.getInt(Constants.PREFERENCE_TIMEOUT) * 1000;
+		mDelayBetweenFailedLogin = bundle.getInt(Constants.PREFERENCE_DELAY_BETWEEN_FAILED_LOGIN) * 1000;
+		mMaxNbrRetires = bundle.getInt(Constants.PREFERENCE_MAX_NBR_RETRIES);
 
 		// Not connected
 		mRootPath = mCurrentPath = "";
@@ -70,66 +77,87 @@ public class FTPFileManager extends AbstractFileManager {
 	 * @return
 	 * @throws ConnectionException
 	 */
-	public FTPClient getConnection() throws FileManagerException {
+	public FTPClient getConnection(final BackgroundOperationListener listener) throws FileManagerException {
 
-		// Connect
-		try {
-			FTPClient ftpClient = new FTPClient();
-			// ftpClient.addProtocolCommandListener(new PrintCommandListener(new
-			// PrintWriter(System.out)));
+		for (int i = 0; i < mMaxNbrRetires; i++) {
 
-			// Timeout
-			ftpClient.setConnectTimeout(mTimeout);
-			ftpClient.setDataTimeout(mTimeout);
+			FTPClient ftpClient = null;
+			try {
+				ftpClient = new FTPClient();
 
-			// Connect to server
-			ftpClient.connect(mHost, mPort);
+				// Setup listner
+				if (listener != null) {
+					ftpClient.addProtocolCommandListener(new LogProtocolCommandListener(listener));
+				}
 
-			// Check the reply code to verify success.
-			int reply = ftpClient.getReplyCode();
-			if (!FTPReply.isPositiveCompletion(reply)) {
-				throw new FileManagerException(FileManagerEvent.ERR_CONNECTION);
-			}
+				// Timeout
+				ftpClient.setConnectTimeout(mTimeout);
+				ftpClient.setDataTimeout(mTimeout);
 
-			if (mLogontype == Logontype.NORMAL) {
-				if (!ftpClient.login(mUsername, mPassword)) {
-					ftpClient.logout();
+				// Connect to server
+				ftpClient.connect(mHost, mPort);
+
+				// Check the reply code to verify success.
+				int reply = ftpClient.getReplyCode();
+				if (!FTPReply.isPositiveCompletion(reply)) {
 					throw new FileManagerException(FileManagerEvent.ERR_CONNECTION);
 				}
+
+				if (mLogontype == Logontype.NORMAL) {
+					if (!ftpClient.login(mUsername, mPassword)) {
+						ftpClient.logout();
+						throw new FileManagerException(FileManagerEvent.ERR_CONNECTION);
+					}
+				}
+
+				// Use passive mode as default because most of us are
+				// behind firewalls these days.
+				ftpClient.enterLocalPassiveMode();
+
+				return ftpClient;
+			} catch (SocketException e) {
+
+				StringBuilder sb = new StringBuilder("x ");
+				sb.append(e.getMessage());
+				listener.onPublishProgress(new FileManagerEvent(FileManagerEvent.LOG_CONNECT, e.getMessage()));
+
+			} catch (IOException e) {
+
+				StringBuilder sb = new StringBuilder("x ");
+				sb.append(e.getMessage());
+				listener.onPublishProgress(new FileManagerEvent(FileManagerEvent.LOG_CONNECT, e.getMessage()));
+
+			} catch (FileManagerException e) {
+				try {
+					if (ftpClient != null) {
+						ftpClient.disconnect();
+					}
+				} catch (IOException e1) {
+				}
+
+				listener.onPublishProgress(new FileManagerEvent(FileManagerEvent.LOG_CONNECT, "x Error login!!!"));
 			}
 
-			// Use passive mode as default because most of us are
-			// behind firewalls these days.
-			ftpClient.enterLocalPassiveMode();
-
-			return ftpClient;
-		} catch (SocketException e) {
-			mConnected = false;
-			throw new FileManagerException(FileManagerEvent.ERR_CONNECTION);
-		} catch (IOException e) {
-			mConnected = false;
-			throw new FileManagerException(FileManagerEvent.ERR_CONNECTION);
-		} catch (FileManagerException e) {
-			mConnected = false;
 			try {
-				mFTPClient.disconnect();
-			} catch (IOException e1) {
+				Thread.sleep(mDelayBetweenFailedLogin);
+			} catch (InterruptedException e) {
 			}
-
-			throw e;
 		}
+
+		// We have reached the maximum number of attempts
+		throw new FileManagerException(FileManagerEvent.ERR_CONNECTION);
 	}
 
 	/**
 	 * @see net.abachar.androftp.filelist.manager.FileManager#doConnect()
 	 */
-	protected void doConnect() throws FileManagerException {
+	protected void doConnect(BackgroundOperationListener listener) throws FileManagerException {
 
 		// Connect
 		try {
 
 			// New ftp client
-			mFTPClient = getConnection();
+			mFTPClient = getConnection(listener);
 			mConnected = true;
 
 			// Paths
@@ -156,7 +184,7 @@ public class FTPFileManager extends AbstractFileManager {
 	 * @see net.abachar.androftp.filelist.manager.FileManager#doChangeToParentDirectory()
 	 */
 	@Override
-	protected void doChangeToParentDirectory() throws FileManagerException {
+	protected void doChangeToParentDirectory(BackgroundOperationListener listener) throws FileManagerException {
 
 		try {
 			if (mFTPClient.changeToParentDirectory()) {
@@ -177,7 +205,7 @@ public class FTPFileManager extends AbstractFileManager {
 	 * @see net.abachar.androftp.filelist.manager.FileManager#doChangeWorkingDirectory(net.abachar.androftp.filelist.manager.FileEntry)
 	 */
 	@Override
-	protected void doChangeWorkingDirectory(FileEntry dir) throws FileManagerException {
+	protected void doChangeWorkingDirectory(BackgroundOperationListener listener, FileEntry dir) throws FileManagerException {
 
 		try {
 			if (mFTPClient.changeWorkingDirectory(dir.getAbsolutePath())) {
@@ -198,7 +226,7 @@ public class FTPFileManager extends AbstractFileManager {
 	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doDeleteFiles(net.abachar.androftp.filelist.manager.FileEntry[])
 	 */
 	@Override
-	protected void doDeleteFiles(FileEntry[] files) throws FileManagerException {
+	protected void doDeleteFiles(BackgroundOperationListener listener, FileEntry[] files) throws FileManagerException {
 
 		try {
 			for (FileEntry file : files) {
@@ -227,7 +255,7 @@ public class FTPFileManager extends AbstractFileManager {
 	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doCreateNewfolder(net.abachar.androftp.filelist.manager.FileEntry)
 	 */
 	@Override
-	protected void doCreateNewfolder(FileEntry dir) throws FileManagerException {
+	protected void doCreateNewfolder(BackgroundOperationListener listener, FileEntry dir) throws FileManagerException {
 
 		try {
 
@@ -249,7 +277,7 @@ public class FTPFileManager extends AbstractFileManager {
 	 * @see net.abachar.androftp.filelist.manager.AbstractFileManager#doRefresh()
 	 */
 	@Override
-	protected void doRefresh() throws FileManagerException {
+	protected void doRefresh(BackgroundOperationListener listener) throws FileManagerException {
 
 		try {
 			// Refresh file list
@@ -267,7 +295,7 @@ public class FTPFileManager extends AbstractFileManager {
 	 *      net.abachar.androftp.filelist.manager.FileEntry)
 	 */
 	@Override
-	protected void doRenameFile(FileEntry file, FileEntry newFile) throws FileManagerException {
+	protected void doRenameFile(BackgroundOperationListener listener, FileEntry file, FileEntry newFile) throws FileManagerException {
 
 		try {
 
@@ -374,5 +402,45 @@ public class FTPFileManager extends AbstractFileManager {
 	 */
 	public int getTimeout() {
 		return mTimeout;
+	}
+
+	/**
+	 * @author abachar
+	 */
+	class LogProtocolCommandListener implements ProtocolCommandListener {
+
+		/** */
+		private BackgroundOperationListener mBackgroundOperationListener;
+
+		/**
+		 * @param mBackgroundOperationListener
+		 */
+		private LogProtocolCommandListener(BackgroundOperationListener mBackgroundOperationListener) {
+			this.mBackgroundOperationListener = mBackgroundOperationListener;
+		}
+
+		/**
+		 * @see org.apache.commons.net.ProtocolCommandListener#protocolCommandSent(org.apache.commons.net.ProtocolCommandEvent)
+		 */
+		@Override
+		public void protocolCommandSent(ProtocolCommandEvent event) {
+			StringBuilder sb = new StringBuilder("> ");
+			sb.append(event.getMessage());
+
+			// Send event
+			mBackgroundOperationListener.onPublishProgress(new FileManagerEvent(FileManagerEvent.LOG_CONNECT, sb.toString()));
+		}
+
+		/**
+		 * @see org.apache.commons.net.ProtocolCommandListener#protocolReplyReceived(org.apache.commons.net.ProtocolCommandEvent)
+		 */
+		@Override
+		public void protocolReplyReceived(ProtocolCommandEvent event) {
+			StringBuilder sb = new StringBuilder("< ");
+			sb.append(event.getMessage());
+
+			// Send event
+			mBackgroundOperationListener.onPublishProgress(new FileManagerEvent(FileManagerEvent.LOG_CONNECT, sb.toString()));
+		}
 	}
 }

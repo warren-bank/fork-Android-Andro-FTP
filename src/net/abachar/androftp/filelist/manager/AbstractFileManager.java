@@ -256,7 +256,7 @@ public abstract class AbstractFileManager implements FileManager {
 	/**
 	 * Do work on second thread class
 	 */
-	private class BackgroundOperationTask extends AsyncTask<FileEntry, Void, BackgroundOperationResult> {
+	private class BackgroundOperationTask extends AsyncTask<FileEntry, FileManagerEvent, BackgroundOperationResult> implements BackgroundOperationListener {
 
 		/** Work type */
 		private BackgroundOperation mOperation;
@@ -288,15 +288,15 @@ public abstract class AbstractFileManager implements FileManager {
 				switch (mOperation.getId()) {
 
 					case BackgroundOperation.CONNECT_ID:
-						doConnect();
+						doConnect(this);
 						break;
 
 					case BackgroundOperation.CHANGE_TO_PARENT_DIRECTORY_ID:
-						doChangeToParentDirectory();
+						doChangeToParentDirectory(this);
 						break;
 
 					case BackgroundOperation.CHANGE_WORKING_DIRECTORY_ID:
-						doChangeWorkingDirectory(params[0]);
+						doChangeWorkingDirectory(this, params[0]);
 						break;
 
 					case BackgroundOperation.CHANGE_ORDER_BY_ID:
@@ -304,26 +304,27 @@ public abstract class AbstractFileManager implements FileManager {
 						break;
 
 					case BackgroundOperation.DELETE_FILES_ID:
-						doDeleteFiles(params);
+						doDeleteFiles(this, params);
 						break;
 
 					case BackgroundOperation.CREATE_NEW_FOLDER_ID:
-						doCreateNewfolder(params[0]);
+						doCreateNewfolder(this, params[0]);
 						break;
 
 					case BackgroundOperation.RENAME_FILE_ID:
-						doRenameFile(params[0], params[1]);
+						doRenameFile(this, params[0], params[1]);
 						break;
 
 					case BackgroundOperation.REFRESH_ID:
-						doRefresh();
+						doRefresh(this);
 						break;
 				}
 
 				result.setSuccess(true);
-//			} catch (ConnectionException ex) {
-//				result.setSuccess(false);
-//				result.addEvent(new FileManagerEvent(FileManagerEvent.ERROR_CONNECTION));
+				// } catch (ConnectionException ex) {
+				// result.setSuccess(false);
+				// result.addEvent(new
+				// FileManagerEvent(FileManagerEvent.ERROR_CONNECTION));
 
 			} catch (FileManagerException ex) {
 				result.setSuccess(false);
@@ -333,11 +334,24 @@ public abstract class AbstractFileManager implements FileManager {
 		}
 
 		/**
+		 * @see net.abachar.androftp.filelist.manager.BackgroundOperationListener#onPublishProgress(java.lang.String[])
+		 */
+		@Override
+		public void onPublishProgress(FileManagerEvent... values) {
+			publishProgress(values);
+		}
+
+		/**
 		 * @see android.os.AsyncTask#onProgressUpdate(Progress[])
 		 */
 		@Override
-		protected void onProgressUpdate(Void... values) {
+		protected void onProgressUpdate(FileManagerEvent... values) {
 			super.onProgressUpdate(values);
+
+			// Notify listners
+			for (FileManagerEvent value : values) {
+				notifyListeners(value);
+			}
 		}
 
 		/**
@@ -362,35 +376,35 @@ public abstract class AbstractFileManager implements FileManager {
 	/**
 	 * 
 	 */
-	protected abstract void doConnect() throws FileManagerException;
+	protected abstract void doConnect(BackgroundOperationListener listener) throws FileManagerException;
 
 	/**
 	 * 
 	 */
-	protected abstract void doChangeToParentDirectory() throws FileManagerException;
+	protected abstract void doChangeToParentDirectory(BackgroundOperationListener listener) throws FileManagerException;
 
 	/**
 	 * 
 	 */
-	protected abstract void doChangeWorkingDirectory(FileEntry dir) throws FileManagerException;
+	protected abstract void doChangeWorkingDirectory(BackgroundOperationListener listener, FileEntry dir) throws FileManagerException;
 
 	/**
 	 * 
 	 */
-	protected abstract void doRefresh() throws FileManagerException;
+	protected abstract void doRefresh(BackgroundOperationListener listener) throws FileManagerException;
 
 	/**
 	 * 
 	 */
-	protected abstract void doDeleteFiles(FileEntry[] files) throws FileManagerException;
+	protected abstract void doDeleteFiles(BackgroundOperationListener listener, FileEntry[] files) throws FileManagerException;
 
 	/**
 	 * 
 	 */
-	protected abstract void doCreateNewfolder(FileEntry dir) throws FileManagerException;
+	protected abstract void doCreateNewfolder(BackgroundOperationListener listener, FileEntry dir) throws FileManagerException;
 
 	/**
 	 * 
 	 */
-	protected abstract void doRenameFile(FileEntry file, FileEntry newFile) throws FileManagerException;
+	protected abstract void doRenameFile(BackgroundOperationListener listener, FileEntry file, FileEntry newFile) throws FileManagerException;
 }

@@ -173,7 +173,7 @@ public class FTPTransferTask extends TransferTask {
 
 		// Get connection
 		try {
-			mFTPClient = fileManager.getConnection();
+			mFTPClient = fileManager.getConnection(null);
 		} catch (FileManagerException e) {
 			e.printStackTrace();
 		}
