@@ -79,7 +79,9 @@ public class FTPFileManager extends AbstractFileManager {
 	 */
 	public FTPClient getConnection(final BackgroundOperationListener listener) throws FileManagerException {
 
-		for (int i = 0; i < mMaxNbrRetires; i++) {
+		int count = mMaxNbrRetires;
+
+		do {
 
 			FTPClient ftpClient = null;
 			try {
@@ -140,13 +142,18 @@ public class FTPFileManager extends AbstractFileManager {
 				}
 			}
 
-			// Sleep
-			listener.onPublishProgress(new FileManagerEvent(FileManagerEvent.LOG_CONNECT, "Status: Waiting to retry..."));
-			try {
-				Thread.sleep(mDelayBetweenFailedLogin);
-			} catch (InterruptedException e) {
+			count--;
+
+			// Sleep before retry
+			if (count > 0) {
+				listener.onPublishProgress(new FileManagerEvent(FileManagerEvent.LOG_CONNECT, "Status: Waiting to retry..."));
+				try {
+					Thread.sleep(mDelayBetweenFailedLogin);
+				} catch (InterruptedException e) {
+				}
 			}
-		}
+
+		} while (count > 0);
 
 		// We have reached the maximum number of attempts
 		throw new FileManagerException(FileManagerEvent.ERR_CONNECTION);
