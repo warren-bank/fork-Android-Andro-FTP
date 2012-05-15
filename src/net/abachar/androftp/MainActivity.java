@@ -16,6 +16,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 /**
  * 
@@ -38,7 +39,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+
 		// Intent extars
 		Bundle intentExtras = getIntent().getExtras();
 
@@ -174,10 +175,12 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Fil
 				break;
 
 			case FileManagerEvent.ERR_CONNECTION:
-				new AlertDialog.Builder(this).setMessage("Erreur de connexion :(").setCancelable(true).setNeutralButton("Close", null).create().show();
+				Toast.makeText(this, "Erreur de connexion :(", Toast.LENGTH_LONG);
+				finish();
 				break;
 
 			case FileManagerEvent.ERR_LOST_CONNECTION:
+				// Retry connect
 				new AlertDialog.Builder(this).setMessage("Connexion perdu :(").setCancelable(true).setNeutralButton("Close", null).create().show();
 				break;
 		}

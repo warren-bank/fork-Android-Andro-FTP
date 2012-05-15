@@ -117,15 +117,19 @@ public class FTPFileManager extends AbstractFileManager {
 				return ftpClient;
 			} catch (SocketException e) {
 
-				StringBuilder sb = new StringBuilder("x ");
-				sb.append(e.getMessage());
-				listener.onPublishProgress(new FileManagerEvent(FileManagerEvent.LOG_CONNECT, e.getMessage()));
+				// StringBuilder sb = new StringBuilder("x ");
+				// sb.append(e.getMessage());
+				// listener.onPublishProgress(new
+				// FileManagerEvent(FileManagerEvent.LOG_CONNECT,
+				// e.getMessage()));
 
 			} catch (IOException e) {
 
-				StringBuilder sb = new StringBuilder("x ");
-				sb.append(e.getMessage());
-				listener.onPublishProgress(new FileManagerEvent(FileManagerEvent.LOG_CONNECT, e.getMessage()));
+				// StringBuilder sb = new StringBuilder("x ");
+				// sb.append(e.getMessage());
+				// listener.onPublishProgress(new
+				// FileManagerEvent(FileManagerEvent.LOG_CONNECT,
+				// e.getMessage()));
 
 			} catch (FileManagerException e) {
 				try {
@@ -134,10 +138,10 @@ public class FTPFileManager extends AbstractFileManager {
 					}
 				} catch (IOException e1) {
 				}
-
-				listener.onPublishProgress(new FileManagerEvent(FileManagerEvent.LOG_CONNECT, "x Error login!!!"));
 			}
 
+			// Sleep
+			listener.onPublishProgress(new FileManagerEvent(FileManagerEvent.LOG_CONNECT, "Status: Waiting to retry..."));
 			try {
 				Thread.sleep(mDelayBetweenFailedLogin);
 			} catch (InterruptedException e) {
@@ -167,16 +171,11 @@ public class FTPFileManager extends AbstractFileManager {
 			loadFiles();
 
 		} catch (IOException e) {
+			throw new FileManagerException(FileManagerEvent.ERR_LOST_CONNECTION);
+		} catch (FileManagerException e) {
+			mFTPClient = null;
 			mConnected = false;
 			throw new FileManagerException(FileManagerEvent.ERR_CONNECTION);
-		} catch (FileManagerException e) {
-			mConnected = false;
-			try {
-				mFTPClient.disconnect();
-			} catch (IOException e1) {
-			}
-
-			throw e;
 		}
 	}
 
@@ -424,7 +423,7 @@ public class FTPFileManager extends AbstractFileManager {
 		 */
 		@Override
 		public void protocolCommandSent(ProtocolCommandEvent event) {
-			StringBuilder sb = new StringBuilder("> ");
+			StringBuilder sb = new StringBuilder("Command: ");
 			sb.append(event.getMessage());
 
 			// Send event
@@ -436,8 +435,12 @@ public class FTPFileManager extends AbstractFileManager {
 		 */
 		@Override
 		public void protocolReplyReceived(ProtocolCommandEvent event) {
-			StringBuilder sb = new StringBuilder("< ");
-			sb.append(event.getMessage());
+
+			StringBuilder sb = new StringBuilder();
+			String lines[] = event.getMessage().split("\\r?\\n");
+			for (String line : lines) {
+				sb.append("Response: ").append(line).append("\\n");
+			}
 
 			// Send event
 			mBackgroundOperationListener.onPublishProgress(new FileManagerEvent(FileManagerEvent.LOG_CONNECT, sb.toString()));
