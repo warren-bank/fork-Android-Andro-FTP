@@ -1,0 +1,4 @@
+include ':Andro-FTP'
+
+include ':apache-commons'
+project(':apache-commons').projectDir = new File(rootDir, 'libs/apache-commons')
