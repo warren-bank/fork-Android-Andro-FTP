@@ -39,3 +39,32 @@ Andro FTP is an ftp client application for Android platform.
     * more recent versions contain ads
 * I'm always on the lookout for an open-source alternative with comparable features
   - TBD&hellip;
+
+#### Known Issues
+
+* UI
+  - forced landscape orientation
+  - layout for MainActivity doesn't work well on small screens
+    * there are 2 ListViews:
+      - local filesystem on the left
+      - remote filesystem on the right
+    * on small screens, only icons are shown..<br>filenames aren't visible
+  - ConnectingDialog has no way to cancel, or dismiss the dialog
+
+* Functionality
+  - a successful connection to an ftp server does not display the remote directory listing
+  - a runtime permission check needs to be added for Android 6+
+    * currently, permission to access external storage needs to be granted manually:
+      ```text
+        Android Settings > Apps > Andro FTP > Permissions
+      ```
+
+* Android Studio Project
+  - enabling Proguard causes the app to immediately crash when launched
+    * the error message pertains to the resource ID (0x0) for a drawable that cannot be found
+
+#### Conclusions
+
+* this app is interesting&hellip;
+  - it _could_ serve as an excellent foundation to build upon
+  - as is, the client is completely unusable
